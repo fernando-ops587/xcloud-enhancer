@@ -18,13 +18,14 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Build with Gradle
+    - name: Locate project and Build
       run: |
+        # Procura onde esta o ficheiro settings.gradle ou build.gradle
+        BUILD_DIR=$(dirname $(find . -maxdepth 3 \( -name "settings.gradle" -o -name "settings.gradle.kts" \) | head -n 1))
+        echo "Pasta do projeto encontrada em: $BUILD_DIR"
+        cd "$BUILD_DIR"
+        
         if [ -f "./gradlew" ]; then
-          chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
-        elif [ -f "./app/gradlew" ]; then
-          cd app
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
         else
