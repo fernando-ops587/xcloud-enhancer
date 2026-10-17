@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         xCloud Enhancer
 // @namespace    local.xcloud.enhancer
-// @version      1.0.2
+// @version      1.0.4
 // @description  Hub nativo, WebGL, teclado+mouse, giroscópio, toque, perfis por jogo, clipes, fila e Android TV
 // @match        https://www.xbox.com/*/play*
 // @match        https://play.xbox.com/*
@@ -14,7 +14,7 @@
   if (window.__xceLoaded) return;
   window.__xceLoaded = true;
   try {
-  const VERSION = '1.0.2';
+  const VERSION = '1.0.4';
   const LS = 'xce:cfg', LSR = 'xce:regions', LSP = 'xce:profiles';
   const jget = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
   const IN_APP = () => !!window.XceNative;
@@ -26,7 +26,7 @@
   const BTN = ['A', 'B', 'X', 'Y', 'LB', 'RB', 'LT', 'RT', 'View', 'Menu', 'L3', 'R3', '↑', '↓', '←', '→'];
   const POS = [['tl', 'Topo esquerdo'], ['tr', 'Topo direito'], ['bl', 'Base esquerda'], ['br', 'Base direita']];
   const HUD_ITEMS = [['fps', 'FPS'], ['ping', 'Ping'], ['loss', 'Perda de pacotes'], ['jitter', 'Jitter'],
-    ['bitrate', 'Bitrate'], ['res', 'Resolução'], ['decode', 'Tempo de decodificação']];
+    ['bitrate', 'Bitrate'], ['res', 'Resolução'], ['decode', 'Tempo de decodificação'], ['audio', 'Buffer de áudio']];
   const KM_ACTIONS = [['up', 'Analógico ↑'], ['down', 'Analógico ↓'], ['left', 'Analógico ←'], ['right', 'Analógico →'],
     ['a', 'A'], ['b', 'B'], ['x', 'X'], ['y', 'Y'], ['lb', 'LB'], ['rb', 'RB'], ['l3', 'L3'], ['r3', 'R3'],
     ['view', 'View'], ['menu', 'Menu'], ['du', 'D-Pad ↑'], ['dd', 'D-Pad ↓'], ['dl', 'D-Pad ←'], ['dr', 'D-Pad →']];
@@ -61,6 +61,10 @@
       { k: 'vibrance', t: 'range', def: 0, min: 0, max: 100, step: 5, fmt: v => v + '%', label: 'Vibrance (cores inteligentes)', desc: 'Realça cores apagadas sem estourar as vivas. Bom para OLED.' },
       { k: 'colorMode', t: 'select', def: 'none', label: 'Modo de cor / acessibilidade', desc: 'Daltonismo e contraste só no modo WebGL.',
         opts: [['none', 'Normal'], ['protan', 'Protanopia'], ['deutan', 'Deuteranopia'], ['tritan', 'Tritanopia'], ['contrast', 'Alto contraste'], ['night', 'Modo escuro (noturno)']] },
+      { t: 'h', label: 'Áudio' },
+      { k: 'audioLatency', t: 'select', def: 'auto', label: 'Atraso do áudio', desc: 'Reduz o buffer do áudio do stream. Se estalar, suba para Equilibrado ou Estável. O pill "Áudio" nas estatísticas mostra o buffer atual em ms.',
+        opts: [['auto', 'Automático (não altera)'], ['low', 'Baixo atraso'], ['balanced', 'Equilibrado'], ['stable', 'Estável']] },
+      { t: 'note', label: 'Som atrasado só na TV? Teste "Baixo atraso". Se o pill "Áudio" já mostrar pouco (menos de 40 ms), o atraso vem da TV ou do aparelho de som: ative o Modo Jogo e desligue efeitos de áudio nas configurações da TV.' },
       { t: 'h', label: 'Imagem' },
       { k: 'brightness', t: 'range', def: 100, min: 50, max: 150, step: 5, fmt: v => v + '%', label: 'Brilho' },
       { k: 'contrast', t: 'range', def: 100, min: 50, max: 150, step: 5, fmt: v => v + '%', label: 'Contraste' },
@@ -106,7 +110,7 @@
       { k: 'curve', t: 'select', def: 'linear', label: 'Curva de resposta', desc: 'Exponencial = mais preciso no centro. Agressiva = reage mais rápido.',
         opts: [['linear', 'Linear'], ['expo', 'Exponencial'], ['aggressive', 'Agressiva'], ['smooth', 'Suave']] },
       { k: 'deadzone', t: 'range', def: 0, min: 0, max: 30, step: 1, fmt: v => v + '%', label: 'Zona morta' },
-      { k: 'combo', t: 'toggle', def: true, label: 'Abrir o painel com View + Menu', desc: 'Segure 1 s. O jogo para de receber comandos enquanto o painel está aberto.' },
+      { k: 'combo', t: 'toggle', def: true, label: 'Abrir o painel com View + Menu (Start)', desc: 'Aperte os dois ao mesmo tempo. No painel: direcional navega, A confirma, B fecha, LB/RB trocam de aba. O jogo não recebe comandos enquanto o painel está aberto.' },
       { t: 'button', label: 'Predefinição: trocar A ↔ B', btn: 'Aplicar', run: () => set('map', { 0: 1, 1: 0 }) },
       { t: 'button', label: 'Predefinição: trocar X ↔ Y', btn: 'Aplicar', run: () => set('map', { ...cfg.map, 2: 3, 3: 2 }) },
       { k: 'map', t: 'remap', def: {}, label: 'Mapeamento de botões', desc: 'O que cada botão físico vai fazer.' },
@@ -137,7 +141,7 @@
       { t: 'h', label: 'Durante o jogo' },
       { k: 'introSec', t: 'range', def: 0, min: 0, max: 30, step: 1, fmt: v => v ? v + ' s' : 'Desligado', label: 'Pular introdução', desc: 'Pressiona A repetidamente nos primeiros segundos. Pode escolher opções de menu por engano.' },
       { k: 'wakeLock', t: 'toggle', def: true, label: 'Manter a tela ligada' },
-      { k: 'bgMute', t: 'toggle', def: true, label: 'Silenciar ao sair da aba/janela' },
+      { k: 'bgMute', t: 'toggle', def: true, label: 'Silenciar ao sair da aba/janela', desc: 'Só no navegador (no app o Android já cuida disso).' },
       { t: 'h', label: 'Clipes e capturas' },
       { k: 'clips', t: 'toggle', def: false, label: 'Gravar buffer de clipe', desc: 'Grava continuamente na memória (usa CPU e RAM).' },
       { k: 'clipSec', t: 'select', def: '30', label: 'Janela do clipe', desc: 'O clipe salvo terá entre metade e o total desta janela.', opts: [['30', '30 s'], ['60', '60 s']] },
@@ -153,7 +157,8 @@
       { k: 'backOpens', t: 'toggle', def: true, label: 'Botão Voltar abre o painel durante o jogo (app)' },
       { k: 'gesture3', t: 'toggle', def: true, label: 'Toque com 3 dedos abre o painel', desc: 'Desligado automaticamente se os controles de toque estiverem ativos.' },
       { k: 'gestureTop', t: 'toggle', def: true, label: 'Segurar o topo da tela por 1 s abre o painel' },
-      { k: 'gearOutside', t: 'toggle', def: true, label: 'Botão ⚙ fora do jogo (menus e fila)' },
+      { k: 'closeGuide', t: 'toggle', def: true, label: 'Fechar o Hub do Xbox ao abrir o painel', desc: 'O Hub prende o foco do teclado/controle; fechá-lo deixa a navegação do painel funcionar.' },
+      { k: 'gearOutside', t: 'toggle', def: true, label: 'Botão ⚙ nos menus e na fila (some quando o Hub está aberto e durante o jogo)' },
       { k: 'gearPos', t: 'select', def: 'bl', label: 'Posição do botão ⚙', opts: POS },
       { k: 'gearFade', t: 'toggle', def: true, label: 'Esmaecer o botão ⚙ quando parado' },
       { k: 'hubSelector', t: 'text', def: '', label: 'Seletor CSS do Hub (avançado)', ph: 'Deixe vazio para detectar automaticamente' },
@@ -380,11 +385,24 @@
   setInterval(() => { if (cfg.autoPing && state.regions.length && ((state.open && ui.tab === 'net') || state.hubOpen)) pingRegions(true); }, 20000);
 
   /* ================= HOOK: WebRTC ================= */
+  const pcs = new Set();
+  const AUDIO_TARGET = { low: 0, balanced: 30, stable: 80 };
+  // jitterBufferTarget / playoutDelayHint controlam quanto áudio o navegador guarda antes de tocar (menos = menos atraso)
+  function applyAudioLatency() {
+    const t = AUDIO_TARGET[cfg.audioLatency]; if (t == null) return;
+    for (const pc of pcs) {
+      if (pc.connectionState === 'closed') { pcs.delete(pc); continue; }
+      try { for (const r of pc.getReceivers()) if (r.track?.kind === 'audio') {
+        if ('jitterBufferTarget' in r && r.jitterBufferTarget !== t) r.jitterBufferTarget = t;
+        if ('playoutDelayHint' in r && r.playoutDelayHint !== t / 1000) r.playoutDelayHint = t / 1000;
+      } } catch (_) {}
+    }
+  }
   const capBitrate = (sdp, mbps) => !mbps ? sdp : sdp.replace(/(m=video[\s\S]*?\r\nc=IN [^\r\n]+\r\n)(b=AS:\d+\r\n)?/, `$1b=AS:${mbps * 1000}\r\n`);
   for (const fn of ['setLocalDescription', 'setRemoteDescription']) {
     const orig = RTCPeerConnection.prototype[fn];
     RTCPeerConnection.prototype[fn] = function (d, ...r) {
-      state.pc = this;
+      state.pc = this; pcs.add(this);
       if (d?.sdp && cfg.bitrate) d = { type: d.type, sdp: capBitrate(d.sdp, cfg.bitrate) };
       return orig.call(this, d, ...r);
     };
@@ -485,7 +503,7 @@
   };
 
   /* ================= ESTATÍSTICAS ================= */
-  let prev = null;
+  let prev = null, prevA = null;
   setInterval(async () => {
     const pc = state.pc;
     if (!pc || pc.connectionState === 'closed') { state.stats = {}; renderHud(); return; }
@@ -501,6 +519,10 @@
             const df = (x.framesDecoded || 0) - prev.frames; s.decode = df > 0 ? ((x.totalDecodeTime - prev.dec) / df) * 1000 : null;
           }
           prev = { t: now, bytes: x.bytesReceived, rec, lost, frames: x.framesDecoded || 0, dec: x.totalDecodeTime || 0 };
+        }
+        if (x.type === 'inbound-rtp' && x.kind === 'audio' && x.jitterBufferEmittedCount) {
+          if (prevA && x.jitterBufferEmittedCount > prevA.n) s.audio = ((x.jitterBufferDelay - prevA.d) / (x.jitterBufferEmittedCount - prevA.n)) * 1000;
+          prevA = { d: x.jitterBufferDelay, n: x.jitterBufferEmittedCount };
         }
         if (x.type === 'candidate-pair' && x.state === 'succeeded' && x.currentRoundTripTime) s.ping = x.currentRoundTripTime * 1000;
       });
@@ -635,7 +657,7 @@ void main(){
   async function lockScreen() { try { if (cfg.wakeLock && navigator.wakeLock && !wl) { wl = await navigator.wakeLock.request('screen'); wl.addEventListener('release', () => { wl = null; }); } } catch (_) {} }
   document.addEventListener('visibilitychange', () => {
     const v = streamVideo();
-    if (document.hidden && cfg.bgMute && v && !v.muted) { v.muted = true; bgMuted = true; }
+    if (document.hidden && cfg.bgMute && !IN_APP() && v && !v.muted) { v.muted = true; bgMuted = true; }
     else if (!document.hidden) { if (bgMuted && v) v.muted = false; bgMuted = false; if (state.streaming) lockScreen(); }
   });
   function onStreamStart() {
@@ -650,6 +672,7 @@ void main(){
   }
   setInterval(() => {
     const v = streamVideo(); if (v && !v.classList.contains('xce-stream')) v.classList.add('xce-stream');
+    applyAudioLatency();
     const now = !!v && v.readyState > 0; if (now !== state.streaming) now ? onStreamStart() : onStreamEnd();
     hubScan();
   }, 600);
@@ -667,15 +690,23 @@ void main(){
   // A janela "Tem certeza?" (sair do jogo) também tem um botão "Sair do jogo": nunca injetar nela
   const isConfirm = e => { let p = e, n = 0; while (p && n++ < 6) { const t = p.textContent || ''; if (t.length < 700 && /tem certeza|are you sure/i.test(t)) return true; p = p.parentElement; } return false; };
 
+  // Raiz do Hub (confirmada no site): div.Guide-module__guide___xxxx. Só procuramos botões DENTRO dela,
+  // assim o cabeçalho da página inicial (também tem "Notificações") nunca recebe o botão por engano.
+  const guideRoot = () => { const g = document.querySelector('[class*="Guide-module__guide"]'); return g && visible(g) ? g : null; };
+  function closeGuide() {
+    const g = document.querySelector('[class*="Guide-module__guide"]');
+    const c = [...(g ? g.querySelectorAll('button') : [])].find(b => /^(fechar|close)$/i.test(label(b))); c?.click();
+  }
   function findHub() {
     if (cfg.hubSelector) { const e = document.querySelector(cfg.hubSelector); if (e) return { el: e }; }
-    const btns = [...document.querySelectorAll('button,[role="button"]')].filter(b => !b.dataset?.xce && visible(b));
+    const g = guideRoot(); if (!g) return null;
+    const btns = [...g.querySelectorAll('button,[role="button"]')].filter(b => !b.dataset?.xce && visible(b));
     for (const re of [SETTINGS_RE, NOTIF_RE]) {
-      const g = btns.find(b => { const t = label(b); return t && t.length < 30 && re.test(t) && !inDialog(b) && b.parentElement?.querySelectorAll('button,[role="button"]').length >= 2; });
-      if (g) return { bar: g.parentElement, ref: g };
+      const t = btns.find(b => { const l = label(b); return l && l.length < 30 && re.test(l) && !inDialog(b) && b.parentElement?.querySelectorAll('button,[role="button"]').length >= 2; });
+      if (t) return { bar: t.parentElement, ref: t };
     }
-    const s = btns.find(b => HUB_BTN.test(label(b)) && !inDialog(b) && !isConfirm(b));
-    return s ? { el: s.parentElement, ref: s } : null;
+    const s = btns.find(b => HUB_BTN.test(label(b)) && !isConfirm(b));
+    return s ? { el: s.parentElement, ref: s } : { el: g };
   }
   function injectEntry(f) {
     const b = document.createElement('button'); b.type = 'button'; b.dataset.xce = '1'; b.setAttribute('aria-label', 'xCloud Enhancer'); b.title = 'xCloud Enhancer';
@@ -687,11 +718,12 @@ void main(){
       b.style.cssText = 'display:block;width:100%;margin:8px 0;padding:12px 16px;border-radius:6px;border:0;background:rgba(255,255,255,.14);color:#fff;font:600 14px system-ui;letter-spacing:.04em;text-transform:uppercase;cursor:pointer';
       f.ref.insertAdjacentElement('afterend', b);
     } else { b.textContent = '⚙ xCloud Enhancer'; b.style.cssText = 'margin:8px;padding:10px 16px;border-radius:10px;border:0;font:600 14px system-ui;cursor:pointer'; f.el.append(b); }
-    b.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); toggle(true); });
+    b.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); toggle(true); if (cfg.closeGuide) setTimeout(closeGuide, 60); });
   }
   function hubScan() {
     if (!root) return;
-    const f = state.streaming ? findHub() : null, open = !!f;
+    const f = findHub(), guide = !!f, open = guide && state.streaming;
+    if (guide !== state.guideOpen) { state.guideOpen = guide; updateGear(); }
     if (open !== state.hubOpen) { state.hubOpen = open; renderHud(); updateTouch(); log('hub', open, f?.bar ? 'barra de ícones' : f?.el?.className); }
     if (f && !(f.bar || f.el).querySelector('[data-xce]')) injectEntry(f);
   }
@@ -749,12 +781,13 @@ button,select,input,textarea{font:inherit;color:inherit}
 .sw{position:relative;width:46px;height:26px;flex:none}.sw input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;z-index:2}
 .sw .k{position:absolute;inset:0;border-radius:99px;background:rgba(255,255,255,.18);transition:.2s}
 .sw .k:after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s}
-.sw input:checked+.k{background:var(--ac)}.sw input:checked+.k:after{transform:translateX(20px)}.sw input:focus-visible+.k{outline:2px solid #fff;outline-offset:2px}
+.sw input:checked+.k{background:var(--ac)}.sw input:checked+.k:after{transform:translateX(20px)}.sw input:focus+.k{outline:3px solid #fff;outline-offset:2px}
 select,.inp{background:#1c2028;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:8px 10px;max-width:220px}
 .inp{width:100%;max-width:none}textarea.inp{min-height:84px;resize:vertical;font-family:ui-monospace,monospace;font-size:12px}
 input[type=range]{accent-color:var(--ac);width:150px}.val{min-width:70px;text-align:right;font-size:13px;opacity:.85;font-variant-numeric:tabular-nums}
 .btn{border:0;background:var(--ac);color:#06130b;font-weight:650;padding:9px 16px;border-radius:10px;cursor:pointer}.btn.danger{background:#ff6b6b;color:#200}.btn.ghost{background:rgba(255,255,255,.1);color:#fff}
-:is(button,select,input,textarea):focus-visible{outline:2px solid #fff;outline-offset:2px}
+:is(button,select,input,textarea):focus{outline:3px solid #fff;outline-offset:2px}
+.row:focus-within{border-color:var(--ac);background:rgba(255,255,255,.09)}
 .map{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
 .map div{display:flex;align-items:center;gap:8px;justify-content:space-between;background:rgba(255,255,255,.04);padding:6px 10px;border-radius:10px;font-size:13px}.map select{padding:4px 6px;max-width:90px}.map button{min-width:80px;padding:5px 8px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:#1c2028;cursor:pointer;font-size:12px}
 .dash{display:flex;flex-direction:column;gap:6px;margin-top:10px}.dr{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.04);font-size:13px}.dr.sel{outline:1px solid var(--ac)}
@@ -902,6 +935,7 @@ input[type=range]{accent-color:var(--ac);width:150px}.val{min-width:70px;text-al
       bitrate: () => s.bitrate != null && ['Bitrate', s.bitrate.toFixed(1) + ' Mb/s', ''],
       res: () => s.res && ['Res', s.res, ''],
       decode: () => s.decode != null && ['Decod.', s.decode.toFixed(1) + ' ms', cls(s.decode, 6, 12)],
+      audio: () => s.audio != null && ['Áudio', Math.round(s.audio) + ' ms', cls(s.audio, 40, 100)],
     };
     HUD_ITEMS.forEach(([id]) => { if (!cfg['hud_' + id]) return; const d = defs[id](); if (d) hudEl.append(h('div', { class: 'pill' }, h('b', { class: d[2] }, d[1]), h('i', {}, d[0]))); });
   }
@@ -920,7 +954,7 @@ input[type=range]{accent-color:var(--ac);width:150px}.val{min-width:70px;text-al
 
   function updateGear() {
     if (!gearEl) return;
-    const hide = state.streaming || !cfg.gearOutside;     // durante o jogo: nenhum botão flutuante
+    const hide = state.streaming || state.guideOpen || !cfg.gearOutside;     // durante o jogo: nenhum botão flutuante
     gearEl.className = `gear ${cfg.gearPos}${hide ? ' off' : ''}${gearEl.classList.contains('idle') ? ' idle' : ''}`;
   }
   function wakeGear(hold) {
@@ -950,6 +984,11 @@ input[type=range]{accent-color:var(--ac);width:150px}.val{min-width:70px;text-al
     if (!state.open) return;
     if (cmd === 'down') moveFocus(1); else if (cmd === 'up') moveFocus(-1); else if (cmd === 'right') adjust(1); else if (cmd === 'left') adjust(-1);
     else if (cmd === 'ok') { const e = root.activeElement; if (e) e.tagName === 'SELECT' ? adjust(1) : e.click(); } else if (cmd === 'back') toggle(false);
+    else if (cmd === 'tabprev' || cmd === 'tabnext') {
+      const i = SCHEMA.findIndex(t => t.id === ui.tab), n = SCHEMA.length;
+      ui.tab = SCHEMA[(i + (cmd === 'tabnext' ? 1 : n - 1)) % n].id; refresh();
+      setTimeout(() => bodyEl.querySelector('button,select,input,textarea')?.focus(), 30);
+    }
   }
   const cycleHud = () => { set('hudMode', cfg.hudMode === 'off' ? 'always' : 'off'); toast('Estatísticas: ' + (cfg.hudMode === 'off' ? 'desligadas' : 'ligadas')); };
   window.addEventListener('keydown', e => {
@@ -966,14 +1005,14 @@ input[type=range]{accent-color:var(--ac);width:150px}.val{min-width:70px;text-al
   window.addEventListener('keyup', e => { km.keys.delete(e.code); }, true);
 
   // No navegador: combo View+Menu e navegação via Gamepad API. No app, o Kotlin cuida disso (evita comandos duplicados).
-  let held = 0, last = [];
+  let latched = false, last = [];
   setInterval(() => {
     if (!state.ready || IN_APP()) return;
     const gp = [...rawPads()].find(g => g && g.buttons.length > 9); if (!gp) return; const b = i => gp.buttons[i]?.pressed;
-    if (cfg.combo && b(8) && b(9)) { held += 50; if (held >= 1000) { held = -1e6; toggle(); } } else if (!(b(8) && b(9))) held = 0;
+    if (cfg.combo && b(8) && b(9)) { if (!latched) { latched = true; toggle(); } } else if (!b(8) && !b(9)) latched = false;
     if (state.open) {
       const edge = i => b(i) && !last[i];
-      if (edge(13)) nav('down'); if (edge(12)) nav('up'); if (edge(15)) nav('right'); if (edge(14)) nav('left'); if (edge(0)) nav('ok'); if (edge(1)) nav('back');
+      if (edge(13)) nav('down'); if (edge(12)) nav('up'); if (edge(15)) nav('right'); if (edge(14)) nav('left'); if (edge(0)) nav('ok'); if (edge(1)) nav('back'); if (edge(4)) nav('tabprev'); if (edge(5)) nav('tabnext');
     }
     last = gp.buttons.map(x => x.pressed);
   }, 50);
@@ -1002,7 +1041,7 @@ input[type=range]{accent-color:var(--ac);width:150px}.val{min-width:70px;text-al
 
   // API para o app Android e para testes
   window.xce = { cfg, state, set, nav, toggle: v => toggle(v), back: () => { if (state.open) { toggle(false); return true; } if (state.streaming && cfg.backOpens) { toggle(true); return true; } return false; },
-    tab: id => { ui.tab = id; refresh(); }, discover };
+    tab: id => { ui.tab = id; refresh(); }, tabId: () => ui.tab, discover };
   } catch (e) { fatal(e); }
 
   // Se algo der errado ao iniciar, mostra um aviso vermelho na tela (toque para fechar)

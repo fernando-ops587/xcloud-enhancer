@@ -14,8 +14,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.os.Handler
-import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
@@ -23,6 +21,7 @@ import android.provider.MediaStore
 import android.util.Base64
 import android.view.InputDevice
 import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.webkit.JavascriptInterface
@@ -48,8 +47,9 @@ class MainActivity : Activity() {
     // Estado do atalho e do painel (o JS avisa quando o painel abre/fecha)
     @Volatile private var panelOpen = false
     private val down = mutableSetOf<Int>()
-    private val handler = Handler(Looper.getMainLooper())
-    private val comboRun = Runnable { web.evaluateJavascript("window.xce&&xce.toggle()", null) }
+    private var comboLatched = false
+    private var lastHatX = 0
+    private var lastHatY = 0
 
     private var saveOut: OutputStream? = null
     private var saveUri: Uri? = null
@@ -216,43 +216,74 @@ class MainActivity : Activity() {
         )
     }
 
+    private fun nav(cmd: String) { web.evaluateJavascript("window.xce&&xce.nav('$cmd')", null) }
+    private fun togglePanel() { web.evaluateJavascript("window.xce&&xce.toggle()", null) }
+
     /**
-     * Atalho View + Menu (Select + Start): segurando ~1 s abre/fecha o painel.
-     * Com o painel aberto, o Kotlin consome TODOS os botões do controle (o jogo não recebe nada)
-     * e traduz D-Pad / A / B em comandos para o painel.
+     * Atalhos para abrir/fechar o painel:
+     *  - Controle (gamepad): apertar View (Select) e Menu (Start) AO MESMO TEMPO.
+     *  - Controle remoto da TV: botão de detalhes ("i", KEYCODE_INFO). A tecla Menu também funciona.
+     * Com o painel aberto, o app consome os botões (o jogo não recebe nada) e traduz
+     * D-Pad / A / B / LB / RB em comandos para o painel, venham do gamepad ou do controle remoto.
      */
     override fun dispatchKeyEvent(e: KeyEvent): Boolean {
         val c = e.keyCode
-        if (c == KeyEvent.KEYCODE_MENU) {
-            if (e.action == KeyEvent.ACTION_UP) web.evaluateJavascript("window.xce&&xce.toggle()", null)
+
+        if (c == KeyEvent.KEYCODE_INFO || c == KeyEvent.KEYCODE_MENU) {
+            if (e.action == KeyEvent.ACTION_UP) togglePanel()
             return true
         }
+
         if (c == KeyEvent.KEYCODE_BUTTON_SELECT || c == KeyEvent.KEYCODE_BUTTON_START) {
             if (e.action == KeyEvent.ACTION_DOWN) {
                 down.add(c)
-                if (down.size == 2 && e.repeatCount == 0) handler.postDelayed(comboRun, 900)
+                if (down.size == 2 && !comboLatched) { comboLatched = true; togglePanel() }
             } else if (e.action == KeyEvent.ACTION_UP) {
                 down.remove(c)
-                handler.removeCallbacks(comboRun)
+                if (down.isEmpty()) comboLatched = false
             }
+            if (panelOpen) return true
         }
-        val fromPad = (e.source and InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD
-        if (panelOpen && fromPad) {
-            if (e.action == KeyEvent.ACTION_DOWN) {
-                val cmd = when (c) {
-                    KeyEvent.KEYCODE_DPAD_UP -> "up"
-                    KeyEvent.KEYCODE_DPAD_DOWN -> "down"
-                    KeyEvent.KEYCODE_DPAD_LEFT -> "left"
-                    KeyEvent.KEYCODE_DPAD_RIGHT -> "right"
-                    KeyEvent.KEYCODE_BUTTON_A, KeyEvent.KEYCODE_DPAD_CENTER -> "ok"
-                    KeyEvent.KEYCODE_BUTTON_B -> "back"
-                    else -> null
-                }
-                if (cmd != null) web.evaluateJavascript("window.xce&&xce.nav('$cmd')", null)
+
+        if (panelOpen) {
+            val cmd = when (c) {
+                KeyEvent.KEYCODE_DPAD_UP -> "up"
+                KeyEvent.KEYCODE_DPAD_DOWN -> "down"
+                KeyEvent.KEYCODE_DPAD_LEFT -> "left"
+                KeyEvent.KEYCODE_DPAD_RIGHT -> "right"
+                KeyEvent.KEYCODE_BUTTON_A, KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> "ok"
+                KeyEvent.KEYCODE_BUTTON_B, KeyEvent.KEYCODE_BACK -> "back"
+                KeyEvent.KEYCODE_BUTTON_L1 -> "tabprev"
+                KeyEvent.KEYCODE_BUTTON_R1 -> "tabnext"
+                else -> null
             }
-            return true
+            if (cmd != null) {
+                val repeatable = cmd == "up" || cmd == "down" || cmd == "left" || cmd == "right"
+                if (e.action == KeyEvent.ACTION_DOWN && (e.repeatCount == 0 || repeatable)) nav(cmd)
+                return true
+            }
+            if ((e.source and InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD) return true
         }
         return super.dispatchKeyEvent(e)
+    }
+
+    // Alguns controles mandam o direcional como "hat" (eixo), não como tecla: tratamos aqui.
+    override fun dispatchGenericMotionEvent(ev: MotionEvent): Boolean {
+        if (panelOpen && (ev.source and InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK &&
+            ev.action == MotionEvent.ACTION_MOVE
+        ) {
+            var x = ev.getAxisValue(MotionEvent.AXIS_HAT_X)
+            var y = ev.getAxisValue(MotionEvent.AXIS_HAT_Y)
+            if (x == 0f && y == 0f) { x = ev.getAxisValue(MotionEvent.AXIS_X); y = ev.getAxisValue(MotionEvent.AXIS_Y) }
+            val dx = if (x > 0.6f) 1 else if (x < -0.6f) -1 else 0
+            val dy = if (y > 0.6f) 1 else if (y < -0.6f) -1 else 0
+            if (dy != 0 && dy != lastHatY) nav(if (dy < 0) "up" else "down")
+            if (dx != 0 && dx != lastHatX) nav(if (dx < 0) "left" else "right")
+            lastHatX = dx
+            lastHatY = dy
+            return true
+        }
+        return super.dispatchGenericMotionEvent(ev)
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {

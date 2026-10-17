@@ -91,6 +91,20 @@ Trocar só o *host* da chamada `/sessions/cloud/play` deixava o restante do flux
 Se a região escolhida falhar, o plugin tenta de novo na região original (opção "tentar a automática"). Um aviso mostra qual servidor foi usado ("Servidor da sessão: …").
 Uma região pode falhar por estar cheia ou por não estar liberada para a sua conta/mercado; isso o plugin não consegue contornar.
 
-## 10. Botão no Hub (v1.0.2)
+## 10. Botão no Hub (v1.0.3)
 
-O botão entra na **barra de ícones** do Hub (ao lado da engrenagem nativa), identificada pelo nome acessível do botão ("Configurações"/"Notificações"). A janela "Tem certeza?" ao sair do jogo é ignorada. Se a barra não for encontrada, o botão aparece abaixo de "Sair do jogo".
+Estrutura confirmada no site (saída de "Descobrir elementos do Hub"): o Hub é `div.Guide-module__guide___xxxx`, dentro de um `Dialog`. Na parte de baixo há uma barra de botões `Button-module__iconButtonBase` com os nomes "Notificações", "Abrir tela inteira", "Controle não detectado" e "Configurações".
+
+- O plugin procura **somente dentro** da raiz do Hub e coloca seu ícone na barra, antes de "Configurações". Assim o cabeçalho da página inicial (que também tem "Notificações") nunca recebe o botão.
+- Funciona com o Hub aberto no menu **e** durante o jogo. As estatísticas só aparecem durante o jogo.
+- A janela "Tem certeza?" ao sair do jogo é ignorada.
+- O ⚙ flutuante some enquanto o Hub está aberto (ele cobria o sino de Notificações) e durante o jogo.
+- Ao clicar no ícone, o painel abre e o Hub é fechado (opção em Interface), porque o diálogo do Hub prende o foco do teclado/controle e atrapalharia a navegação do painel.
+
+## 11. Atalhos, navegação e áudio (v1.0.4)
+
+**Atalhos (app):** View + Menu apertados juntos abrem/fecham o painel (sem precisar segurar); no controle remoto da TV, o botão de detalhes ("i", `KEYCODE_INFO`) faz o mesmo.
+
+**Navegação com o controle:** com o painel aberto, o Kotlin consome todos os botões (o jogo não recebe nada) e envia comandos ao JS (`xce.nav`): direcional, A, B e LB/RB (troca de aba). O direcional também é lido como eixo "hat" (alguns controles não mandam teclas). O foco de cada opção ganha destaque.
+
+**Áudio:** o atraso do som tem duas fontes possíveis: o buffer do navegador e o caminho de áudio da TV (HDMI, processamento, ausência de Modo Jogo). O plugin só controla a primeira, via `RTCRtpReceiver.jitterBufferTarget`/`playoutDelayHint` nos receptores de áudio (Vídeo → Áudio), e mostra o buffer real em ms (campo `jitterBufferDelay / jitterBufferEmittedCount` do `getStats`). No app, o "silenciar ao sair da aba" fica desativado.
