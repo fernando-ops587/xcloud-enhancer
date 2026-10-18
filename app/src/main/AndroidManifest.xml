@@ -12,7 +12,7 @@
     <uses-feature android:name="android.hardware.sensor.gyroscope" android:required="false"/>
 
     <application
-        android:label="xCloud Enhancer 1.0.5"
+        android:label="xCloud Enhancer 1.0.7"
         android:icon="@drawable/ic_launcher"
         android:banner="@drawable/banner"
         android:isGame="true"

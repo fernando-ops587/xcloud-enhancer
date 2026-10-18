@@ -114,3 +114,20 @@ Estrutura confirmada no site (saída de "Descobrir elementos do Hub"): o Hub é 
 4 s não é buffer de rede (o jitter buffer fica em dezenas/centenas de ms): indica fila de saída de áudio do aparelho (caminho do `<video>` no WebView da TV). Duas saídas:
 - **Web Audio:** o som sai do `<video>` (mudo) e toca por um `AudioContext({latencyHint:'interactive'})`, outro caminho de saída. O Chrome só entrega áudio remoto ao Web Audio se o stream também estiver ligado a um elemento de mídia, por isso há um `<audio>` mudo auxiliar.
 - **Ressincronizar:** solta e religa `video.srcObject`, o que reinicia o renderizador de áudio e descarta o que estiver na fila.
+
+## 13. Navegação e desempenho (v1.0.6)
+
+**Navegação:** o plugin guarda o próprio cursor (índice do item) e pinta o destaque. Não depende do foco do navegador, que o Hub ou o jogo podiam tirar do painel. Direcional move, A confirma/ajusta, B fecha, LB/RB trocam de aba.
+
+**Travamentos:** o painel e as estatísticas só redesenham quando o valor muda; o ping automático só roda com o painel aberto e fora do jogo (a cada 30 s); o filtro WebGL limita a 30 quadros por segundo e a 1280 px de largura; as estatísticas atualizam a cada 2 s.
+
+## 14. Desempenho e bitrate (v1.0.7)
+
+Sinais medidos pelo usuário na TV (Wi-Fi): ping 30 ms, bitrate ~1,2 Mb/s, buffer de áudio > 1200 ms. Ping baixo com bitrate baixo e buffer alto indica que o vídeo chega devagar ao aparelho, o que faz o navegador pedir menos ao servidor, e não um problema de rota.
+
+Mudanças:
+- **Perfil de sistema:** 720p não envia mais `osName: android`. Só 1080p altera o perfil (`windows`). Se o bitrate estava baixo porque o servidor entregava um perfil de celular, isso resolve.
+- **Filtro CSS:** o `filter` no `<video>` só é aplicado quando algum valor foge do padrão. Com os padrões, o vídeo não recebe nenhum estilo do plug-in.
+- **WebSocket:** o hook que fazia `JSON.parse` em cada mensagem foi removido. A fila continua sendo lida das respostas HTTP da sessão.
+- **Loop principal:** de 600 ms para 1 s; no modo leve não roda nada além da detecção do jogo.
+- **Modo leve (teste):** desliga, durante o jogo, o HUD, o filtro, o WebGL, o Hub e o hook do controle. View + Menu continua funcionando.

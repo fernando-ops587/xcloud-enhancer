@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         xCloud Enhancer
 // @namespace    local.xcloud.enhancer
-// @version      1.0.5
+// @version      1.0.7
 // @description  Hub nativo, WebGL, teclado+mouse, giroscópio, toque, perfis por jogo, clipes, fila e Android TV
 // @match        https://www.xbox.com/*/play*
 // @match        https://play.xbox.com/*
@@ -14,7 +14,7 @@
   if (window.__xceLoaded) return;
   window.__xceLoaded = true;
   try {
-  const VERSION = '1.0.5';
+  const VERSION = '1.0.7';
   const LS = 'xce:cfg', LSR = 'xce:regions', LSP = 'xce:profiles';
   const jget = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
   const IN_APP = () => !!window.XceNative;
@@ -48,7 +48,7 @@
   const SCHEMA = [
     { id: 'video', icon: '🎬', title: 'Vídeo', items: [
       { k: 'resolution', t: 'select', def: 'auto', label: 'Resolução do stream',
-        desc: 'Pede 720p ou 1080p ao servidor. 1440p depende da conta/servidor e não é garantido.',
+        desc: 'Automática é o recomendado. 1080p altera o perfil pedido ao servidor; 720p usa o padrão. 1440p não é garantido.',
         opts: [['auto', 'Automática'], ['720p', '720p'], ['1080p', '1080p']] },
       { k: 'bitrate', t: 'range', def: 0, min: 0, max: 30, step: 1, fmt: v => v ? `${v} Mbps` : 'Auto', label: 'Limite de bitrate', desc: '0 deixa o xCloud decidir.' },
       { k: 'codec', t: 'select', def: 'auto', label: 'Codec preferido', desc: 'Só vale se o aparelho suportar.',
@@ -171,6 +171,7 @@
       { k: 'css', t: 'area', def: '', label: 'CSS personalizado', ph: '.alguma-coisa { display:none }' },
     ]},
     { id: 'adv', icon: '🧰', title: 'Avançado', items: [
+      { k: 'liteGame', t: 'toggle', def: false, label: 'Modo leve durante o jogo (teste)', desc: 'Durante o jogo desliga o painel de estatísticas, o filtro de imagem, o WebGL e a injeção no Hub. View + Menu continua funcionando. Use para descobrir se o plugin causa o atraso.' },
       { k: 'debug', t: 'toggle', def: false, label: 'Log de depuração no console' },
       { t: 'button', label: 'Descobrir elementos do Hub', desc: 'Lista no campo abaixo classes que parecem ser do menu do Xbox.', btn: 'Listar', run: () => { J().value = discover().join('\n') || 'Nada encontrado. Abra o Hub durante o jogo e tente de novo.'; } },
       { t: 'area', id: 'json', label: 'Exportar / importar', ph: 'Clique em Exportar, ou cole um JSON e clique em Importar.' },
@@ -192,6 +193,7 @@
     open: false, ready: false, streaming: false, hubOpen: false, game: null, retry: 0 };
   const ui = { tab: 'video' };
 
+  const liteOn = () => !!cfg.liteGame && state.streaming;
   function set(k, v) {
     cfg[k] = v; save(); applyStyle(); renderHud(); renderQueue(); updateTouch();
     if (k === 'gl') glSync();
@@ -222,7 +224,7 @@
 
   /* ================= HOOK: fetch / XHR / beacon / WebSocket ================= */
   const TELEMETRY = /(browser|mobile)\.events\.data\.microsoft\.com|arc\.msn\.com|dc\.services\.visualstudio\.com/i;
-  const OS_BY_RES = { '720p': 'android', '1080p': 'windows' };
+  const OS_BY_RES = { '1080p': 'windows' };  // 720p NÃO altera o perfil: 'android' pode reduzir o bitrate enviado pelo servidor
   const _fetch = window.fetch;
   let notified = false;
 
@@ -244,7 +246,7 @@
         const reg = state.regions.find(x => x.name === cfg.region);
         if (reg) { const u = new URL(url); u.host = new URL(reg.baseUri).host; url = u.toString(); input = typeof input === 'string' ? url : new Request(url, input); }
       }
-      if (cfg.resolution !== 'auto' && body?.settings) {
+      if (cfg.resolution !== 'auto' && OS_BY_RES[cfg.resolution] && body?.settings) {
         body.settings.osName = OS_BY_RES[cfg.resolution]; init = { ...init, body: JSON.stringify(body) }; log('osName', body.settings.osName);
       }
       try { toast('Servidor da sessão: ' + new URL(url).host.split('.')[0]); } catch (_) {}
@@ -299,17 +301,6 @@
   XMLHttpRequest.prototype.open = function (m, u, ...r) { if (cfg.noTelemetry && TELEMETRY.test(String(u))) u = 'data:text/plain,'; return _open.call(this, m, u, ...r); };
   const _beacon = navigator.sendBeacon?.bind(navigator);
   if (_beacon) navigator.sendBeacon = (u, d) => (cfg.noTelemetry && TELEMETRY.test(String(u))) ? true : _beacon(u, d);
-
-  const _WS = window.WebSocket;
-  if (_WS) {
-    const WS = function (...a) {
-      const ws = new _WS(...a);
-      ws.addEventListener('message', e => { if (typeof e.data === 'string' && e.data[0] === '{') { try { onSession(JSON.parse(e.data), true); } catch (_) {} } });
-      return ws;
-    };
-    WS.prototype = _WS.prototype; ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'].forEach((k, i) => { WS[k] = i; });
-    window.WebSocket = WS;
-  }
 
   /* ================= FILA ================= */
   const PT = { Provisioning: 'Preparando', WaitingForResources: 'Na fila', ReadyToConnect: 'Sessão pronta', Provisioned: 'Conectando', Failed: 'Falhou', Queued: 'Na fila' };
@@ -385,7 +376,7 @@
     }));
     pinging = false; renderDash(); silent || toast('Ping atualizado');
   }
-  setInterval(() => { if (cfg.autoPing && state.regions.length && ((state.open && ui.tab === 'net') || state.hubOpen)) pingRegions(true); }, 20000);
+  setInterval(() => { if (cfg.autoPing && state.regions.length && state.open && ui.tab === 'net' && !state.streaming) pingRegions(true); }, 30000);
 
   /* ================= HOOK: WebRTC ================= */
   const pcs = new Set();
@@ -492,8 +483,11 @@
   navigator.getGamepads = () => {
     const list = Array.from(rawPads());
     if (state.open) return list.map(gp => gp && wrapPad(gp, { buttons: gp.buttons.map(() => NEUTRAL), axes: gp.axes.map(() => 0) }));
+    if (liteOn()) return list;
+    const cfgIdle = !cfg.km && !cfg.touch && !cfg.deadzone && cfg.curve === 'linear' && !Object.keys(cfg.map).length && !(cfg.gyro && gy.on) && Date.now() >= introUntil;
+    if (cfgIdle) return list;
     const vin = virtualInput(), hasReal = list.some(Boolean);
-    const idle = !vin && !cfg.deadzone && cfg.curve === 'linear' && !Object.keys(cfg.map).length && !(cfg.gyro && gy.on);
+    const idle = !vin;
     if (idle) return list;
     if (!hasReal) {
       if (!vin) return list;
@@ -508,6 +502,7 @@
   /* ================= ESTATÍSTICAS ================= */
   let prev = null, prevA = null;
   setInterval(async () => {
+    if (liteOn()) { if (Object.keys(state.stats).length) { state.stats = {}; renderHud(); } return; }
     const pc = state.pc;
     if (!pc || pc.connectionState === 'closed') { state.stats = {}; renderHud(); return; }
     try {
@@ -532,7 +527,7 @@
       state.stats = s;
     } catch (_) {}
     renderHud();
-  }, 1000);
+  }, 2000);
 
   /* ================= VÍDEO: CSS e WebGL ================= */
   const streamVideo = () => [...document.querySelectorAll('video')].find(v => v.srcObject instanceof MediaStream);
@@ -578,7 +573,16 @@
     const k = cfg.cas / 10 * 1.2, conv = document.getElementById('xce-conv');
     if (conv) conv.setAttribute('kernelMatrix', `0 ${-k} 0 ${-k} ${1 + 4 * k} ${-k} 0 ${-k} 0`);
     const f = `brightness(${cfg.brightness}%) contrast(${cfg.contrast}%) saturate(${cfg.saturate}%)` + (cfg.cas ? ' url(#xce-sharp)' : '');
-    styleEl.textContent = (GLS.on ? 'video.xce-stream{opacity:0!important}' : `video.xce-stream{filter:${f};object-fit:${cfg.aspect === 'fill' ? 'fill' : cfg.aspect === 'cover' ? 'cover' : 'contain'}}`) + '\n' + (cfg.css || '');
+    const parts = [];
+    if (!liteOn()) {
+      if (GLS.on) parts.push('opacity:0!important');
+      else {
+        const needF = cfg.brightness !== 100 || cfg.contrast !== 100 || cfg.saturate !== 100 || cfg.cas > 0;
+        if (needF) parts.push(`filter:${f}`);
+        if (cfg.aspect !== 'contain') parts.push(`object-fit:${cfg.aspect === 'fill' ? 'fill' : 'cover'}`);
+      }
+    }
+    styleEl.textContent = (parts.length ? `video.xce-stream{${parts.join(';')}}` : '') + '\n' + (liteOn() ? '' : (cfg.css || ''));
     if (host) { host.style.setProperty('--ac', ACCENTS[cfg.accent] || ACCENTS.green); host.style.setProperty('--ts', cfg.touchSize / 100); host.style.setProperty('--to', cfg.touchOpacity / 100); }
   }
 
@@ -634,13 +638,14 @@ void main(){
   function glStop() {
     if (!GLS.on) return; GLS.on = false; GLS.cv?.remove(); applyStyle();
   }
-  function glSync() { cfg.gl && state.streaming ? glStart() : glStop(); }
+  function glSync() { cfg.gl && state.streaming && !liteOn() ? glStart() : glStop(); }
   function glFrame() {
     if (!GLS.on) return; const { v, gl, cv, u } = GLS;
     if (!v.isConnected || !v.srcObject) { glStop(); return; }
     const next = () => { GLS.h = v.requestVideoFrameCallback ? v.requestVideoFrameCallback(glFrame) : requestAnimationFrame(glFrame); };
     if (v.readyState < 2 || !v.videoWidth) return next();
-    const r = v.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2), W = Math.min(2560, Math.round(r.width * dpr)), H = Math.round(W * r.height / (r.width || 1));
+    const now = performance.now(); if (now - (GLS.last || 0) < 33) return next(); GLS.last = now;
+    const r = v.getBoundingClientRect(), dpr = 1, W = Math.min(1280, Math.round(r.width * dpr)), H = Math.round(W * r.height / (r.width || 1));
     Object.assign(cv.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' });
     if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; gl.viewport(0, 0, W, H); }
     const ca = r.width / r.height, va = v.videoWidth / v.videoHeight;
@@ -708,11 +713,12 @@ void main(){
   }
   setInterval(() => {
     const v = streamVideo(); if (v && !v.classList.contains('xce-stream')) v.classList.add('xce-stream');
-    applyAudioLatency();
-    if (cfg.audioMode === 'webaudio') { if (state.streaming) waStart(v); } else if (WA.ctx) waStop();
     const now = !!v && v.readyState > 0; if (now !== state.streaming) now ? onStreamStart() : onStreamEnd();
+    if (cfg.audioMode === 'webaudio') { if (state.streaming) waStart(v); } else if (WA.ctx) waStop();
+    if (liteOn()) return;
+    applyAudioLatency();
     hubScan();
-  }, 600);
+  }, 1000);
 
   /* ================= HUB NATIVO DO XBOX ================= */
   // O Hub (guia) do Xbox tem uma barra de ícones embaixo (notificações, microfone, controle, configurações).
@@ -824,7 +830,7 @@ select,.inp{background:#1c2028;border:1px solid rgba(255,255,255,.12);border-rad
 input[type=range]{accent-color:var(--ac);width:150px}.val{min-width:70px;text-align:right;font-size:13px;opacity:.85;font-variant-numeric:tabular-nums}
 .btn{border:0;background:var(--ac);color:#06130b;font-weight:650;padding:9px 16px;border-radius:10px;cursor:pointer}.btn.danger{background:#ff6b6b;color:#200}.btn.ghost{background:rgba(255,255,255,.1);color:#fff}
 :is(button,select,input,textarea):focus{outline:3px solid #fff;outline-offset:2px}
-.row:focus-within{border-color:var(--ac);background:rgba(255,255,255,.09)}
+.row.cur{border-color:var(--ac);background:rgba(255,255,255,.09);box-shadow:0 0 0 2px color-mix(in srgb,var(--ac) 45%,transparent)}
 .map{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
 .map div{display:flex;align-items:center;gap:8px;justify-content:space-between;background:rgba(255,255,255,.04);padding:6px 10px;border-radius:10px;font-size:13px}.map select{padding:4px 6px;max-width:90px}.map button{min-width:80px;padding:5px 8px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:#1c2028;cursor:pointer;font-size:12px}
 .dash{display:flex;flex-direction:column;gap:6px;margin-top:10px}.dr{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.04);font-size:13px}.dr.sel{outline:1px solid var(--ac)}
@@ -870,7 +876,7 @@ input[type=range]{accent-color:var(--ac);width:150px}.val{min-width:70px;text-al
     SCHEMA.forEach(s => tabs.append(h('button', { class: 'tab' + (s.id === ui.tab ? ' on' : ''), onclick: () => { ui.tab = s.id; refresh(); } }, s.icon + ' ' + s.title)));
     const sc = bodyEl.scrollTop; bodyEl.replaceChildren();
     SCHEMA.find(s => s.id === ui.tab).items.forEach(i => { const r = row(i); r && bodyEl.append(r); });
-    bodyEl.scrollTop = sc; updateGear();
+    bodyEl.scrollTop = sc; updateGear(); paintCursor();
   }
 
   function row(i) {
@@ -959,8 +965,11 @@ input[type=range]{accent-color:var(--ac);width:150px}.val{min-width:70px;text-al
     if (!on) { tc.b.fill(0); tc.ax.fill(0); }
   }
 
+  let hudSig = '';
   function renderHud() {
     if (!hudEl) return;
+    const sig = JSON.stringify([state.stats, cfg.hudMode, state.open, state.hubOpen, state.pc && 1]);
+    if (sig === hudSig) return; hudSig = sig;
     const s = state.stats, show = cfg.hudMode === 'always' || (cfg.hudMode === 'hub' && (state.hubOpen || state.open)), on = show && state.pc && Object.keys(s).length;
     hudEl.className = on ? `hud ${cfg.hudPos} ${cfg.hudSize}` : ''; hudEl.style.opacity = cfg.hudOpacity / 100; hudEl.replaceChildren(); if (!on) return;
     const cls = (v, g, w) => v <= g ? 'good' : v <= w ? 'warn' : 'bad';
@@ -1002,17 +1011,26 @@ input[type=range]{accent-color:var(--ac);width:150px}.val{min-width:70px;text-al
   function toggle(v) {
     if (!root) return; state.open = v ?? !state.open; native('panel', state.open);
     root.querySelector('#layer').classList.toggle('open', state.open);
-    if (state.open) { wakeGear(true); km.keys.clear(); if (document.pointerLockElement) document.exitPointerLock(); setTimeout(() => panelEl.querySelector('.tab.on')?.focus(), 300); }
+    if (state.open) { nav0.i = 0; setTimeout(paintCursor, 50); wakeGear(true); km.keys.clear(); if (document.pointerLockElement) document.exitPointerLock(); setTimeout(() => panelEl.querySelector('.tab.on')?.focus(), 300); }
     updateTouch(); renderHud();
   }
 
   /* ---- navegação por teclado / controle ---- */
-  const focusables = () => [...panelEl.querySelectorAll('button,select,input,textarea')];
-  function moveFocus(d) {
-    const f = focusables(); let i = f.indexOf(root.activeElement); i = i < 0 ? 0 : clamp(i + d, 0, f.length - 1, 0); f[i]?.focus(); f[i]?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  // Cursor próprio: o plugin guarda qual item está selecionado e pinta o destaque. Não depende do foco do navegador,
+  // que o Hub/jogo pode roubar (por isso a navegação parou).
+  const nav0 = { i: 0 };
+  const items = () => [...bodyEl.querySelectorAll('button,select,input,textarea')].filter(e => e.offsetParent !== null || e.getClientRects?.().length);
+  function paintCursor() {
+    const list = items(); if (!list.length) return;
+    nav0.i = clamp(nav0.i, 0, list.length - 1, 0);
+    bodyEl.querySelectorAll('.cur').forEach(e => e.classList.remove('cur'));
+    const el = list[nav0.i]; el.closest('.row')?.classList.add('cur');
+    el.scrollIntoView?.({ block: 'nearest' });
   }
+  function moveFocus(d) { nav0.i = clamp(nav0.i + d, 0, items().length - 1, 0); paintCursor(); }
+  function curEl() { return items()[nav0.i]; }
   function adjust(d) {
-    const e = root.activeElement; if (!e) return;
+    const e = curEl(); if (!e) return;
     if (e.type === 'range') { e.value = +e.value + d * (+e.step || 1); e.dispatchEvent(new Event('input')); }
     else if (e.tagName === 'SELECT') { e.selectedIndex = clamp(e.selectedIndex + d, 0, e.options.length - 1); e.dispatchEvent(new Event('change')); }
   }
@@ -1020,11 +1038,11 @@ input[type=range]{accent-color:var(--ac);width:150px}.val{min-width:70px;text-al
   function nav(cmd) {
     if (!state.open) return;
     if (cmd === 'down') moveFocus(1); else if (cmd === 'up') moveFocus(-1); else if (cmd === 'right') adjust(1); else if (cmd === 'left') adjust(-1);
-    else if (cmd === 'ok') { const e = root.activeElement; if (e) e.tagName === 'SELECT' ? adjust(1) : e.click(); } else if (cmd === 'back') toggle(false);
+    else if (cmd === 'ok') { const e = curEl(); if (e) { if (e.tagName === 'SELECT' || e.type === 'range') adjust(1); else if (e.type === 'checkbox') e.click(); else if (e.tagName === 'INPUT' || e.tagName === 'TEXTAREA') e.focus(); else e.click(); } } else if (cmd === 'back') toggle(false);
     else if (cmd === 'tabprev' || cmd === 'tabnext') {
       const i = SCHEMA.findIndex(t => t.id === ui.tab), n = SCHEMA.length;
       ui.tab = SCHEMA[(i + (cmd === 'tabnext' ? 1 : n - 1)) % n].id; refresh();
-      setTimeout(() => bodyEl.querySelector('button,select,input,textarea')?.focus(), 30);
+      nav0.i = 0; setTimeout(paintCursor, 30);
     }
   }
   const cycleHud = () => { set('hudMode', cfg.hudMode === 'off' ? 'always' : 'off'); toast('Estatísticas: ' + (cfg.hudMode === 'off' ? 'desligadas' : 'ligadas')); };
@@ -1078,7 +1096,7 @@ input[type=range]{accent-color:var(--ac);width:150px}.val{min-width:70px;text-al
 
   // API para o app Android e para testes
   window.xce = { cfg, state, set, nav, toggle: v => toggle(v), back: () => { if (state.open) { toggle(false); return true; } if (state.streaming && cfg.backOpens) { toggle(true); return true; } return false; },
-    tab: id => { ui.tab = id; refresh(); }, tabId: () => ui.tab, waActive: () => !!WA.ctx, resyncAudio, discover };
+    tab: id => { ui.tab = id; refresh(); nav0.i = 0; paintCursor(); }, tabId: () => ui.tab, waActive: () => !!WA.ctx, resyncAudio, cssText: () => styleEl?.textContent, liteOn, discover };
   } catch (e) { fatal(e); }
 
   // Se algo der errado ao iniciar, mostra um aviso vermelho na tela (toque para fechar)
