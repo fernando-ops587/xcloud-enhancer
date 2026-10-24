@@ -161,3 +161,30 @@ Também foi removida a camada de hardware do WebView adicionada na 1.0.8 (podia 
 **Diagnóstico de áudio.** O indicador mostra o buffer (`jitterBufferDelay/jitterBufferEmittedCount`) e o jitter de chegada dos pacotes de áudio. Buffer alto com jitter baixo aponta para o aparelho (saída de áudio/sincronia); jitter alto aponta para a rede.
 
 **Ícone.** O ícone do app e o banner da Android TV usam a arte enviada, com versão adaptativa (círculo, quadrado arredondado e tema do Android 8+).
+
+## 17. Áudio na TV (v1.1.1)
+
+**Por que não se usa `currentTime`/`buffered`:** o xCloud entrega áudio e vídeo por WebRTC (stream ao vivo), não por Media Source Extensions. Em um `<video>` ligado a um `MediaStream`, `buffered` é vazio e `currentTime` não pode ser movido. O atraso vive em outros lugares, que o plug-in agora mede:
+- **jitter buffer do WebRTC (NetEq)**: `jitterBufferDelay / jitterBufferEmittedCount`;
+- **rede**: `jitter` e perda de pacotes do `inbound-rtp` de áudio;
+- **consumo de áudio**: amostras refeitas (`concealedSamples`) e aceleração/desaceleração do NetEq;
+- **saída do aparelho**: `AudioContext.baseLatency` / `outputLatency`.
+
+**Diagnóstico (Avançado):** mede 10 s e emite um veredito: saída de áudio lenta (aparelho), rede em rajadas, áudio faltando, buffer alto com rede estável (sincronia com vídeo) ou entrega normal (atraso fora do app: TV).
+
+**Android:** `AudioManager` com `AudioFocusRequest` (`USAGE_GAME`, `AUDIOFOCUS_GAIN`), `volumeControlStream = STREAM_MUSIC`, tela em 60 Hz e ALLM. `WebSettings` não tem nenhum ajuste de buffer de áudio; o buffer de saída é definido pelo WebView e pelo hardware.
+
+**Opcionais:** `AudioContext` do modo Web Audio com `latencyHint: 0`; vigia que reinicia o áudio se o buffer passar de 800 ms por ~10 s (máx. 3 vezes por jogo).
+
+## 18. Análise do better-xcloud e alinhamento (v1.1.2)
+
+**O que o better-xcloud faz de fato com o áudio:** nada para latência. A documentação oficial lista só o "controle de volume" (reforço de até 600%, desligado por padrão). Não há ajuste de buffer, `playoutDelayHint` nem `jitterBufferTarget` documentado.
+
+**O que ele faz de diferente do nosso app:**
+- **User-agent:** o perfil padrão é o REAL do navegador, e o autor recomenda sempre tentar esse primeiro. Relatos nos issues (#371, #375) mostram falhas com o perfil "Edge + Windows" quando a versão declarada não bate com o navegador real (ex.: preferências de codec inválidas). Nosso app declarava sempre "Edge/Chrome 124 no Windows", mesmo com WebView de TV bem mais antigo.
+- **App Android:** limita a tela a 60 Hz e liga o ALLM (já copiados na 1.1.0).
+
+**Mudanças:**
+- identificação padrão = a real do WebView (sem `; wv` e `Version/4.0`); opções "Windows + Edge" (com a versão real do WebView, não 124 fixo) e "Smart TV";
+- nada forçado por padrão (perfil leve, codec, atraso de áudio e Web Audio ficam desligados; migração aplica isso a quem já tinha configuração);
+- o app mostra a versão do WebView ao abrir e avisa se for menor que 110; o diagnóstico de áudio também mostra a versão.

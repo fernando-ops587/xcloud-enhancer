@@ -9,8 +9,8 @@ android {
         applicationId = "local.xcloud.enhancer"
         minSdk = 24
         targetSdk = 34
-        versionCode = 12
-        versionName = "1.1.0"
+        versionCode = 14
+        versionName = "1.1.2"
     }
     signingConfigs {
         getByName("debug") {

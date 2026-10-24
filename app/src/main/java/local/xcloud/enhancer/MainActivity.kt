@@ -10,6 +10,9 @@ import android.content.ContentValues
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.media.AudioAttributes
+import android.media.AudioFocusRequest
+import android.media.AudioManager
 import android.net.Uri
 import android.net.wifi.WifiManager
 import android.os.Build
@@ -45,6 +48,7 @@ class MainActivity : Activity() {
     private var docStart = false
     private var warned = false
     private var wifiLock: WifiManager.WifiLock? = null
+    private var audioFocusReq: AudioFocusRequest? = null
 
     // Estado do atalho e do painel (o JS avisa quando o painel abre/fecha)
     @Volatile private var panelOpen = false
@@ -73,6 +77,21 @@ class MainActivity : Activity() {
 
         @JavascriptInterface
         fun panel(open: Boolean) { panelOpen = open }
+
+        @JavascriptInterface
+        fun getUA(): String = uaMode()
+
+        @JavascriptInterface
+        fun setUA(mode: String) {
+            getSharedPreferences("xce", MODE_PRIVATE).edit().putString("ua", mode).apply()
+            runOnUiThread { web.settings.userAgentString = uaFor(mode); web.reload() }
+        }
+
+        @JavascriptInterface
+        fun webViewInfo(): String {
+            val pkg = if (Build.VERSION.SDK_INT >= 26) WebView.getCurrentWebViewPackage() else null
+            return (pkg?.packageName ?: "webview") + " " + (pkg?.versionName ?: chromeVer())
+        }
 
         @JavascriptInterface
         fun postJson(url: String, json: String) {
@@ -142,6 +161,7 @@ class MainActivity : Activity() {
         // Prioridade máxima para a interface e o vídeo
         try { android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_DISPLAY) } catch (_: Exception) { }
         limit60Hz()
+        volumeControlStream = AudioManager.STREAM_MUSIC
         // Pede à TV o "modo jogo" (ALLM): menos processamento de imagem e de som na própria TV
         if (Build.VERSION.SDK_INT >= 30) { try { window.setPreferMinimalPostProcessing(true) } catch (_: Exception) { } }
 
@@ -167,9 +187,7 @@ class MainActivity : Activity() {
             settings.allowContentAccess = false
             settings.setGeolocationEnabled(false)
             settings.cacheMode = WebSettings.LOAD_DEFAULT
-            settings.userAgentString =
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-                "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0"
+            settings.userAgentString = uaFor(uaMode())
             webViewClient = object : WebViewClient() {
                 // Reserva: se o aparelho não suporta injeção no início da página, injeta aqui (o script ignora a 2ª vez)
                 override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) { inject(view, url) }
@@ -208,7 +226,11 @@ class MainActivity : Activity() {
 
         setContentView(web)
         val ver = try { packageManager.getPackageInfo(packageName, 0).versionName } catch (_: Exception) { "?" }
-        Toast.makeText(this, "xCloud Enhancer $ver", Toast.LENGTH_LONG).show()
+        val major = chromeVer().substringBefore('.').toIntOrNull() ?: 0
+        Toast.makeText(this, "xCloud Enhancer $ver · WebView $major", Toast.LENGTH_LONG).show()
+        if (major in 1..109) {
+            Toast.makeText(this, "O WebView desta TV é antigo (versão $major). Atualize o \"Android System WebView\" na loja de apps: versões antigas atrapalham o áudio e o desempenho.", Toast.LENGTH_LONG).show()
+        }
         web.loadUrl("https://www.xbox.com/play")
     }
 
@@ -230,11 +252,56 @@ class MainActivity : Activity() {
         } catch (_: Exception) { }
     }
 
+    /**
+     * Foco de áudio: avisa o Android que o app é um jogo e quer o áudio em primeiro plano.
+     * Sem isso, algumas TVs tratam o som do WebView como secundário.
+     */
+    private fun requestAudioFocus() {
+        try {
+            val am = getSystemService(AUDIO_SERVICE) as AudioManager
+            if (Build.VERSION.SDK_INT >= 26) {
+                val attrs = AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_GAME)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MOVIE)
+                    .build()
+                val req = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                    .setAudioAttributes(attrs)
+                    .setOnAudioFocusChangeListener { }
+                    .build()
+                audioFocusReq = req
+                am.requestAudioFocus(req)
+            } else {
+                @Suppress("DEPRECATION")
+                am.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
+            }
+        } catch (_: Exception) { }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        requestAudioFocus()
+    }
+
     override fun onDestroy() {
+        try {
+            if (Build.VERSION.SDK_INT >= 26) audioFocusReq?.let { (getSystemService(AUDIO_SERVICE) as AudioManager).abandonAudioFocusRequest(it) }
+        } catch (_: Exception) { }
         try { wifiLock?.let { if (it.isHeld) it.release() } } catch (_: Exception) { }
         try { (web.parent as? android.view.ViewGroup)?.removeView(web); web.destroy() } catch (_: Exception) { }   // evita vazamento de memória do WebView
         super.onDestroy()
     }
+
+    // ---- Identificação do navegador (user-agent) ----
+    // Padrão: a identificação REAL do WebView (só sem "; wv" e "Version/4.0"), como o better-xcloud.
+    // Declarar um Chrome mais novo do que o WebView de verdade faz o site negociar recursos que o aparelho trata mal.
+    private fun realUa(): String = WebSettings.getDefaultUserAgent(this)
+    private fun chromeVer(): String = Regex("Chrome/([0-9.]+)").find(realUa())?.groupValues?.get(1) ?: "0.0.0.0"
+    private fun uaFor(mode: String): String = when (mode) {
+        "windows" -> "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${chromeVer()} Safari/537.36 Edg/${chromeVer()}"
+        "tv" -> "Mozilla/5.0 (SMART-TV; LINUX; Tizen 7.0) AppleWebKit/537.36 (KHTML, like Gecko) 94.0.4606.31/7.0 TV Safari/537.36"
+        else -> realUa().replace("; wv", "").replace(" Version/4.0", "")
+    }
+    private fun uaMode(): String = getSharedPreferences("xce", MODE_PRIVATE).getString("ua", "default") ?: "default"
 
     private fun inject(view: WebView, url: String?) {
         if (!docStart && url != null && (url.startsWith("https://www.xbox.com") || url.startsWith("https://play.xbox.com"))) {

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         xCloud Enhancer
 // @namespace    local.xcloud.enhancer
-// @version      1.1.0
+// @version      1.1.2
 // @description  Hub nativo, WebGL, teclado+mouse, giroscópio, toque, perfis por jogo, clipes, fila e Android TV
 // @match        https://www.xbox.com/*/play*
 // @match        https://play.xbox.com/*
@@ -14,7 +14,7 @@
   if (window.__xceLoaded) return;
   window.__xceLoaded = true;
   try {
-  const VERSION = '1.1.0';
+  const VERSION = '1.1.2';
   const LOGO = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgAAABICAYAAABV7bNHAAAev0lEQVR42p2ceZRd1XXmf/uc+96r96pKKg1oQJYskEBCELANMmBDAINnMLYxnufVaQ8hJO12Z3CyAk7Sy47jTro9dNbCpNeyje1uOx0MeOHgKAZsM5jRYBCIwWIySKIk1VxvuOfs/uPc4dxbVbJXv7WgVK/eu/ecffb59re/vc8VjvS6AsNuhO/hALZ/Zvt6P+TPVq/niJeXq+d4Y80qsaCqiAgq4FURIPsF7xXvtLisKqjXyk/x4J2iXvGqoCDGgIL3HlVFPeCB8Ofi8/jsOl5BBFRQp6gD9X6/V55A9QFEfqKDwa1zN764r5jfZyG76qIvWdI438Xyzswwn91+plr9mChvNA2zBiNoqqjLBgcoiiAomSE0GAIlDBbwPrypGgyKSphU9rs6CuOgoD5ct/i7L6eiGhk6M5QqCIL32WfzsYhk11PU+f0oN0rPXDX9r7++E4BLsbkT/FYGOueKc5JbP3treuyfHLuptbz1ObHyXknAdz3qw5TUq4iKYBDVYB6DhIkoNUOEefnUQ7HKpQG9ywznFa/ZsFx2HSLjAOryeZce6H3uUlJZhHzl1OUjQgCDFRgo3vlv+578WXfXC88sZSRbf+PS715qb7zsRrftim3vaI40rkta9gzfc6oD9epVvGJEMSiCIuGekk08d/XI9NFKF2uSv6cKPjaWlD/zlYdwG5Vie6Ga/8iMKJXrhnckDCH8EFUMIHhVTcNcJDEni5X3JZuH96Y3zDzMpVh2o0sa6JwrzkluvOxGd+Jfn/DHtpNchWc47aapIFZRA4jmk86GkG+B8O9yRMW2yFZTsokYDIoWWyPfSlUjhavjSy8qtp2WnlMatPTY3Dz5VtdsrPlWzqxpBBFNNcXIqFh5pz2mPUivn/0J55DwdIlJtr6tdly5/c8ayxqf9z3nvFdExWrp1WHgOU5kWyVfqnxE+ZbQGIdig3lK7Mm3pS8nX3ieV3wOwLVr1j+nWgJ4HQNxvgbDkn/fqMPj1ZumvcBuGtb05pmbYyPZeFud+NcnfCAZbXwl7aUpqhbFKDmOlG4tJQ4HG+WT9YrzhO2GoD5EIAojRJP0FKBa7pdwDck8Q30U5UpMKa1TRMJoC9c8roJH0VdVw30kuL6o804a5ny7sf20u2Xuvny7SRbq9MS/OG67DDfuRWj5VEVRIVtVAJ+DpNcSSlSLvY+GCFTAoQpQAqhm0cxn31EXGT6OWl4Lb9XC0FqAvRJN2ufbMzN8hgFFhKyAdYgUPpuPaLkrsrHnkN5TZ07r/3jfbi7Fmiu4IgSHxH5VEmn7vldFJV9h78G76sWUEozzFfaqWXj1xYR8HIo1GKcIy87jnc+uQeZt+TXKn+p8zSOyz0dRzheAn9+DMI4IydXH/Cyajy+2omiqijFtVfc/AWFHWGaOv+L4NzRGkh/6eedExPo4rEYRSIsrl7hRQI/XhRhSI4REW6sA6RwTokkF79AA5lpiX3CijHu5AvwijqTZGGM8jLwsv119N2i0c706sWI1dW/u3zx+owEQK5dncy5A0XtfTiDiLSUmZffKWXK8whUCR8F0vasaqwjjuXdF5KyIiCIlqMZAHH03D+mas/fKQubjishiJZJLca3cgoqoenM5gGz99NYtdtQ8KMZ0cBqwi1p4zWl9FMjzlfbeVwyTs8LChrlxtOZJGkeqckL5PXPCJ7l3RYw6Z++BifvAnmMGHmEQ8YJQYmrB4ok83vmcyYiqdiXVUxJpyhtNw3Z813mMGDKOUniqj1Yyi0oqVFam2F4ZIOSr6XPviUM7UT6lJRciN0Lu+hmYF3lZfk9fGoDK52sRLsMkrSUOpadF3ykcQjL3UY+VIQ+vT9TIq8KiBFQt9mycx2QDcN4XE8l5u89Dc5yIZoMvIlXMZVSqgxMTJuJ9NngpDR+nGvk1C0zxgazGrLxg2TGrLjPEwqMiiIhDP+XCa+ZpZycoJ2jIkURjdM++kUce8TkW+EBzImCrALlmYJt7DuWqSwF08copLlX8QHEuTywUEbCJFB6n6jM8yicVgbaWyFWhAdmMy+2ukfdI5EFSWCnzMBEVFL8jUa/H+xRUxagGX9acJPgImQtTS8GWC/Dzis+z+Vr4lwzIi5Dry2v05oKXtdrKyEpotsIE+vMwP6nMTXsQoTkkWZ4Xs3bNSCpF1NL6hCPeRJYK5QQxj8qS7d0ajTESvODYRAwd73yWMUiRDsTWldgjK5OsphM5CSvCfZ6dZ8bxPkBgOlB8qqzdCMecBGuPMYyMCc0mWCMM+srspHLgaeXJ+z3PPBom0BzKcC2KYAteeaKrMSBnviX5hgtzEqpbszRuZnMx7aQCsNT4Qe62BZnSjGxJxoqjJM2XRlDvy1V1Zdqhqgy60B5RTj5XOOZkodEUpsbh13s881Mh7W4vg5XrDMfvtGw73fL0Lx13/cCz/zmlNUJl++beUAppC1MLQZB4q1XlkMrnK1HNK4kghUzhfXDbyiqgNdKnVTIXcyIXC2H5CgWDiYats3Kd54yLhRXrDPueUPbc6TjwlNKd8aRpMKYRaLUcazYKJ51tOW6nYcOxln//dsqe+xxDI0EmKTxAqqCMryJwVRGI06MK7hSQEFOkRBVcgTVSGjJbpWC0KB+ipPr534gTUV+TJbIt2e8JY0cpZ73d0Fom3HuTY89tSppC0oSkIyQZcHqvpA6e2qM88+iA33nYcvalDd7w0QRNPXt+4RkazqMlpUFUa6pCLXmNjRB/JeZQcZKminHeFyCqGuVC6ovJ5tqvegiAnrFnr3jn8ani0khTjsmfBs+yieeUC6AxbLjnBs+DuzySQHNYMEZQn2f/wYNFhNawkLSFe29x3PS1AZIqr39/k9VrhEE3yquK+8UUQirZfI6tIRIqqlGultEZkSqW4cHkcqePciRXaLxafNDH3uG0DLW+JHZaiOiKRJrPoAubdsCydcLu2xyP3e1pL8u2havKKXECmd9veEzYfZ/j9mtTVq6Hsy9KcH2teLUUOZlGgUYXIYXRtqzwLipFgfy/JIToQt2JiGLwCKFK4YOIVhrMpRlz9qXolWOPmHDDZkdZudWx71nl8Tug0cp0aEKqAAQO5KtyiWYBwiC0R+HeWxwn7DSceIbl7l2W555ytIZMNUesa95Sze5yJTKSGyMqoAsUSuM1ovYRgfJFVNJI5yk1GHVBmB5qhp+JhcQqiVGsUZJEwSmDrtIcUg7sVR6/TenPZ4vng2dqCmkXmgk0kvCzmRiaFhoCw+0Q/lHo95X7bvE0R4Stpxj8oCreU0tliq0SaeEl49fid6GKU4VRBRICF0O0mvDlFD7mRnGORBY633Rxi7Ubhbk5jfBRwSjdOeGGb3Y5vB9mx23whiSQwzy36s15Lnp3m5N3Nhn0hMQIiQHjhZHhBpPjjq/+wyG6855GS3jmccfhF1OO3hpuNuiBMYqx2dBdrVajtTIUZXkoL1bFHEhyIVCCDUyZrUiURPpK6lAYLNJ2BKXXh5uu69HrKSuPhs5yGF6pDK9SOmPCms3ChR9qMjQUtpRJQk6Vb4e5aeX8twxx5htatEaEsTXCijXC8lXCmk2WRkv5xtcOMX4wJWkYJIHZaTi4TxldDWs3CqNjkCRKdwa6c2QzihTISIMCrXhRpcBWAlml6GBHXzl2pRYZOZGQHkkdtbpjbiQrysyM8vgDKVu2JQyNQr8XCKRX6PU8y1YJ6zYYHr07xfnAcQSYm1bOOL/Jee9oMTerBb75NORg3VnlS1ce5FePD2iP2gJaXAonvdqwdrPl5LMavOI8y4mnJxy9xeB6yvivPaqCTYhEv2oyXahNWisP1nRrFOzozrEr1eWieCmQLyZP5PowWShWpyRWmJlWnnrEse3khOawkKYZo8XT78GqDYZVqyyP3D3AJNCbgRN2Jpz3ribdrg9b3ISIaBuCd3D15yZ48tEBnRUWr7moFaSx1euE2UPKweeUmQlPqyNsOSXhpLMtq9cJv97jmZtWkoYURZeQXkiES0Lxf42NKBXpxHZOXX5lmWLUtF/Vquzgo5xLSx05SYSJQ45nH3Nsf3kT2yIzUrhfvwfrt1iGh4WHbx/wkh2GV1/aZJCWHERVMNZgrfCtL06x54E+7ZVJIIOmXGERePIXjoduT3n0HsfDdzoe+pnjqQcdnRFhx9kJW3Yk7H3AMT3psYlExcVaSrFIKldl24odOXXsSiJ1ryB3UT1bNOc8kXroSklBHSQJHDzg2fekZ/srErBlYiko/Z6ycVvCUAdaGxzN4eCNxpZe3mjB9788w0M/79FemeCJyFt+L8BaSJqCbRpMIjgH4897dt/mwCknnp2wYYtl920pLs3ohlai/UIhiIUwgoIdecXyK+tCXKXs4kt+URHAfTUTdg6aLeHA847xZxzbTrOhHu+LPJbBQNm0rcHsnGP/gV7gMNnuabcNu/7XHA/8pJ8Zh9JziilIlDdJwWFEgsGw8OQ9jk7HcPJrLH5geOLelGQoxlStlKgLq3mt6GD5he3wK5ZdWa9EEAntFaCP1DiN8hiNqg6tpvDCXsfUAc9xpzUYpL4UD0VIU2X1yiYTBx0TUynNlqU1bLjzu11+savP0IoEj8k8L2DTgoIgNVYcsQ9pCM8+4tl6smXzSQkP35EyN6NYKwuIYCHY16+de66AwWeSQZY2xL02RfKZl1RiK0eatET5i3PQGRMeujPllm91GerYaHsLXiH1ju072iTAxPSAe67r8Ysf9WmNJURQmWFTpP7GUkSeTkSfVwSbCPNTnvt2pYytga0vs+h8rlJE/0mU6OaRu9hBZYpivCsTVDLQLRLOuNpZMV7cmKARLcjyulRoLzfcu6vPbd/pMdSxuKw1xavifIhwJ582zPgDysM3DGgtN2FQRip5FTEu1gS6QtrwRNFXIYGnHnHMz3s2bZOoblf1uoq+rIuVrcEUOo8PGS65MbSWasTajy91ZY08q1QFAqNtdQz3/XyO+3fN0+mYrEIbJF2nAXLPeF2bVccmIQUxZbNV3IxQ4F0k/pe1+VpTlg/bbPqwMn3I01kROhBi8VEqrkiZcsTpfDZXQ9TCFgSvemZb9vBUMMjlJZtYppVCN+53Ye1JwtbzLXfeMsvun3Vpjwgu9YXuNOjD6DrDhZe3GR41DOZCZYMsctaVvwqA+roiWG5/ySSWfkq9RLiAGGqlDLwwUhmf1clx1Yy9AGlPpTy8YEBarUmJKP1ZZeMpwnHnGUZWGDac0uCnN83y5D19OiMWl9fCLMzPKmNHCxd+cohEwPXKqqNWCgdSkyJ0Ef6Seb1ThjrQ6MD0hIdBNW0qBL56NVipRDMttli8r/OOLx+MlndlEDU7aU20D7Xy4Lq9WdhwgnDyhQZjYKgd5NWjdiTsunaGF/akIXXwJTeZm1HWbTe88WNDaD8I+pVGhazqWTQ0aD0niLxbgL6yZrOhNWJ54Yls27GEBi3Vom6FUHow8UrFgtcCKVJr2nRc+HehL683A2s3C6df2sCIoZkY2sOW9rBhzSbLimMsP/iHWQ7vVYaGDS4NlzAW5qY9x53Z4HUfGSKd9sGrfdQNEs+hxvjxEb/xIBa2n91gdgr2PuCgKUVetqBJU5eQOrKXyasAPqql56BVVACkWr0sbJd5kxHozSqr1gu/+4EmthFErkZTSBowPJIwMprQfcowd1i5/r/NMLNfaXVMNnnFJMLMpPI7r23yu+9sMZjwmVinNWNoUSDUWgHYGEgnlRPOTdjwcsujt6W8uNdjWxG8eF2Yn6rW0owsmRXB5IW/eJ8Vpa9c1427N3zVkwTozSujK+D8jzZpDQd92SZhwI2G0O4YnrjJcWiv0lplmTyk/ODvZ0mnIWkacBlNMMrMpOPMd7TY+eYW/cM+E9e0qLCIhIELcddZKCcNJpWtZyXsfFeLiefhrn/uIY2atxHNo17TV12Qi9r2jtErqwCsVfPW3tOoZ1lUSXswNAQXfmKI0TVCr+sRo8WqtjqWB6/t86ufD2gut6gakiFh+oBn/xOObWc2UZMVATK3TQfKcac1mNyv7NuTknRChu/74AbgB+Hfvh+KCCIwtg5OuajByy9pMpiHm786z/jTHtsWdMl2cCm3VAREcflHll2yXovqaaVTtNqiEid7ubKYpmBRLv79NuuON0xPebyE970PUeT+6/s8cP2A1phFpSRtgtI/7Nl6asLrL2/jMr5lMiUvSYSmNVz7d/P86r6UlScKq48TWkOGZit4pyDYBoysMqx8qWFomfDiI8pd13QZ3+uxIzn2SNRzJwvJodYwLtqKsuyt67TSIKVaseCCPI34+EAowxx7aoOZKReM40NSahLhyTtSbv9Ol+aIzRJPKXsbNUSI3kHPSa9pctYHWqRpAHvJKqbNluB7wv/9/BzjBzxbXm9Yu11oDwuNlsGaoBSkPZh6zvPcfY6n73WkfYLn+Pqs6zmXLhTJakRRRi9ep3EXBDXw4whtdY0ERpbBYN5XrJ5/fvqgIolBbNWVi0J3RkQHc57lKwVjopXLOkuSljDoCzOHwTSg2Q7LbkyZSw160JsGHEhHgj695OmLaIx+QQdzLf1QkrwXSMqwFXWQZcW2QospBW7JBPMXny/LPtT4hW0ajLWImLIOnd0/9S58xljowNSkoukiapYqWMU2g6g2PyPkBwY0SzrFgO3EcnAWoo3JKImvYo1UDgJU0o16+09SaUkrGgLiQn9Wn8oMFXewI0qzJUU3e9n+G4xrxNIb9NG5WYo+3Qy9k5HloZlhdhrT6ZA0Ddooc/Mi/ErZKicGrAFNFlEHo/bhYhGmpqDZRBrNMCeJBXkW7K1qhSO8k1Tkg6hRI68xiUjZMBVXKrOJGLF4PN6FektiLM6FvsHu/BzrV63jNee/g9H2cGY0g3OOb/7o/7DxqJfwhU9cwce++J85cPAAjUarmjACzrlMajVYMaShyyqEYGMzjSkkXdaaokxljeWfvvB1rr72m9x8xy7syDK8d2WboEgFihb2B4dXkpcLtI431Ir7mbgkeYsbwXVnJw5Cu0Or1cGljrmJF6E9ghFl+0uP5+av/ICx0eWMHzqAsRZrLN1el+/dfB1jo8u5+DUX8Z++/BcoSn/Qh+nJcqDGwPAottEkHfRJZ2cxI8uDiCbCYHYanMcMj4Iog6kJ6A/AwyCxXHLBhey6+1YY9MuwXXWQWoSrybIKSXkGI3KxHLQlc/ZcXovq4GnqGGsv41Mf/FP+5ac3cM+Dd9AcWc6Vn/grfvbQXez6t+u4/I8+TmItG950PIfnpjHG4n1Y3bQ3i9m4le78XBhQr8exx2znI29+P6vHVgDCCy/u4+rrvsEL+55jy+bjedf5F/Ol713NXG8e7XV5y3kXs2J0Od+4/hrUWt72+ndywennYgw8v38fs/PzdLu9sDeLWnylSzjzTqntjPJliBqjSqDVosM1VhRjEE6SBocPv8iy4WF++tUfsnb5Gv7xU1/kk5f8Ho88uRsSy9qVR/Hwrx7h0L7naDbD9jHGYLKThCAkicU5x1BzmH//yvd59+vexlGjYxw1spzfe9sH+eF//y50B2w5+qX81z+4gk6rHQqbc7O89w2X8Ifv/Th6YJYPvek9/MvfX8Ox61/CUctWcu5pr2bF8pWk6aDWDrNQ0ljQqSaZFJv3B5X7TspWkAio64gfApInaXe47HN/QKc1zF3X3M78/Cw7P3wOvx5/AYwwSFMSk9BoDZGYBCGUF6xY+vkKiTDf7/LSTceyef1GNl/0Mp7e8xCksPOsc7nrmh+zbM06pqanmZmZxCBYY9EkYWZ+lsPTE5DCW897Ez+6/d944zvfCMsMJE3Gf/YMrUYznPaJzpGp1CqqFSCq4pAp8xJZKDnm8USr+UyuHFqbgEvZddfNbFq3kWdeeI6nn36cTmcUvCexFmMMg8NdZg+9SPfwON1D48weHi8G7bOzHYlJ6Pa6zM7PQSuBFkzPzZD2uyRJwC4rhkOTh0mnJnCHUrrdLklWlLfGMDE5EcbYGgr8KO3H8mEtUZdF6JEuqJslCzUVorOMObiXLSWFFGkMc5MTXHD2RXzrb/6J9/3Jh7jyk3/Ot/72W7zvzz8MNuEn99/O//j0F/jMf/kszz3/LLbZLJj0d27838ELm0M0G01ePHiAofYwf/SeT3DL3beA97z9dW9HFaanJjk8M0F7eJQ/fM/HuP/h+xkyhvNPP5d94+F87hPP7OWjb3s/b3n7Jcy7AetWr2Pdmg145ys5VqW9bCmGHaUSSfy7xoUmovZYodbTJ6SDAauWr+ZzH/9L/vTLV/Dtf/4Gv3jqEW74u+/wtte8le//+Fq+dt3X2bx2I5e94z9gjcnCr2G+1+X6n/6Q6ZkZHnvyUawant/3LJd//tN8+oOX85GL3g0C890+H/7L36ff67Jn7x7+5qq/5VPv/SQiyoHDBzk8NcGep56AsYQvfP1LHLdpC1f91VfwLuX5F/fx0GMPMzk9GSqNLNwdFdfSRc6bCSpDrz1KC8EpOvsZ50wVD0OLMxLNZgvxMDM1ydDICN35eaxYRkdGmZmbRfG4mRmkPUxikhIU84YCYzBe8BKobzo9Da02Q40WCHR7Xej3sMOjoYF9bhbb6tBoNOnOzWVEtc3ApWiaQq9HozOKsUJvZhZpNjHW4ik7yqTeaLWgtbVmu9Z5qyfEyHJCZ4rkzeBxNVNLFyuTWQlG8l5p2IT+wGc6jcd5hxGL60OjGaKUJEGW9ZmGJFlJWk2QLaD8rB9kEm/DkCQJXh2aZpDpUxANE09DQicmOksySMErppWU0cmUtTCJTlBW6mNELFkKdj5jk82dd4uVdRrO0cliQF3PWeJTxdYYBl3P+mMsJ7zSMnHAk85b2suELS9L8A7ao4b5w8rImGHV+oT2sISennmgL2w6MWF4TJh6IbDktccmrDmmwVDTkKaOwZzSGTOccJal1Ramx8O5/S07LUdvsRx63uO6Qfw/4VUNxFpmxkOTaK3OE81eSuio1+xRjxEB2W2893uzXEzjLvviCF3l1HKeypbVRyWI7MtXC42O0u2G7xgLL9lmeNlrG7Q6gh8otiVsO92y4wwb5NYUTBOO25mw9eUNxAYva7Zh6yuE7a9uBJbfVV66w3DwOce+x9LQiNVXVm00pDrADRTS0MC15jjL6FGCDrSqHi62jaK2mioeFTjwtDUvGTpGrLkgO0dgKkaOTzbH0c6XfxcNTU/tUWF4uXB4n9Kfg2ZHmD7o8KkyfVCZm4BmW+jNwfiznt680p1Qxo42uH7osu91lf40tEZg/BlPswMHnvI4F1TGDdsMxhqm9ocW3uVrLSaBQ88FJaAxJKRdZeqAY+awBpnliK+yLbiak6EYMer1m5KcuWqnSbgDEVt4Xa1dVuoAHyWyRB2uSZIfjyqPMLhUsQ0pm9F9xK9EEFHSbiaPNEpJwjkFR5A5AN/34e/Z9TWrRdsm+LSs4WvfY5qCGlm8/4clamoL3/Ca+lcJ55A03aq7aJiX4dQDVrXyiADiY6Cl4BUdcolKQhITMclbgqUia9YJbHEiMj4mJQu7v2IRLD77lYN03IK8tNPoEhpadMZARNTrg6yaPM1wK6mHqxEV9apLHjaj1mUR1cWLh0PIwpCpvnbqRhd2c8UiV2Uh6pho6vlSaI8RlraKSK1ZUzkyJ1ICQItexa2kBjDpVPJ13/e/wmJx6iuH3jR/XE21c/Q30Ifq+3H2LLXmASnVyyKprA9eSnlWi+RScxtVDKssIdcs1r3BosaxmrqnkPbXg0Z3KcKD+2eNmssyUPCVE0UFd6ie/in3xeKD0lrD1uKlX6k0c+uRsCF+Ukm0/UopVRZ/rk3c4iv1FKzCY4JKbRDQy3hw/yyXYsLTTi7Fun+de0yObjelKeeI11RUbNlwLUd81FAlUurC5Li6nLJEf6Acye0jsIrOWCytyS+OvnqEJwQpKU3TUKef56Gpf8wflxOSlN3hIUN60/wus769WRrmVHWkkXUW3kgW7xjVI3WPLrDiYmfdq4sqWj5hZunr/rZAvKhxFNWUhmmo89/gl5OXZcbx1cfj7A6PrPLXzH/fbhhaLw3zSjyCVwdiKqxzKQllMWtqzc0jsI4xZIlGnnJrypG23m9hHI0fkpAfpsUBhsRYTfVqHpr8KGCyZwjpwgcs3RoyF//s/A1m/dBBhHOx0kLztk5iH48eyxVLBLLgtJ/IUu5f6SCIVAapZtdCtcmbRaz2m7wmVwnzipgCVizQVdU/5qHJz0RZmy75BKr8mV7+R/M/t2uHrgc2Y+V4jJji0L1WnsYjRwqbla42Yl1JFnX4pc6PoouA7gI8q6ujGrc4BPptxGCNyZ4ndpM63sPDk99fzDhHfshb9Ewve8bKC0TkPyqcL8LKPCyLLo6DdeYd8yelHvejY9u6REiMX55qVKrjoddqkdDUqhXKYQw/VsxVPHDoR/9fD3mriPrxsE5dsclYc46onqVwksBxCEdp8biDMlepHpCNZqK6oINCdWFN/DceF4hdTmThdyQ/68QBRJ9U5JfA7aTcwiMTT9fMvGSh+v8BdowYJyK9LR0AAAAASUVORK5CYII=';
   const LS = 'xce:cfg', LSR = 'xce:regions', LSP = 'xce:profiles';
   const jget = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
@@ -42,7 +42,7 @@
   // Perfis rápidos (Vídeo): um toque aplica um conjunto de ajustes
   const PERF = {
     'Desempenho máximo': { tvMode: 'on', resolution: '720p', codec: 'H264', audioLatency: 'low', gl: false, cas: 0, fxaa: false, vibrance: 0, gamma: 100, colorMode: 'none', brightness: 100, contrast: 100, saturate: 100, aspect: 'contain', stretch: 0, hudMode: 'hub', clips: false, liteGame: false },
-    'Equilibrado': { tvMode: 'auto', resolution: 'auto', codec: 'auto', audioLatency: 'auto', gl: false, cas: 0, fxaa: false, hudMode: 'hub', clips: false, liteGame: false },
+    'Equilibrado': { tvMode: 'off', resolution: 'auto', codec: 'auto', audioLatency: 'auto', gl: false, cas: 0, fxaa: false, hudMode: 'hub', clips: false, liteGame: false },
     'Qualidade': { tvMode: 'off', resolution: '1080p', codec: 'auto', audioLatency: 'auto', gl: true, cas: 5, fxaa: true, vibrance: 20, hudMode: 'hub', clips: false, liteGame: false },
   };
   const TEMPLATES = {
@@ -55,7 +55,7 @@
   const SCHEMA = [
     { id: 'video', icon: '🎬', title: 'Vídeo', items: [
       { t: 'perf', label: 'Perfis rápidos', desc: 'Desempenho máximo: 720p, H.264, sem filtros (melhor para TV). Equilibrado: tudo automático. Qualidade: 1080p com nitidez.' },
-      { k: 'tvMode', t: 'select', def: 'auto', label: 'Perfil leve para TV / aparelho fraco', desc: 'Pede 720p, prefere o codec H.264 (decodificação por hardware) e usa baixo atraso de áudio, quando essas opções estiverem em Automático. Recomendado na TV.',
+      { k: 'tvMode', t: 'select', def: 'off', label: 'Perfil leve para TV / aparelho fraco', desc: 'Pede 720p, prefere o codec H.264 e usa baixo atraso de áudio, nas opções em Automático. Desligado por padrão (como o better-xcloud).',
         opts: [['auto', 'Automático (ligado no app Android)'], ['on', 'Ligado'], ['off', 'Desligado']] },
       { k: 'resolution', t: 'select', def: 'auto', label: 'Resolução do stream',
         desc: '720p pede o perfil leve (menos carga no aparelho); 1080p pede o perfil de PC. 1440p não é garantido.',
@@ -76,6 +76,7 @@
         opts: [['auto', 'Automático (não altera)'], ['low', 'Baixo atraso'], ['balanced', 'Equilibrado'], ['stable', 'Estável']] },
       { k: 'audioMode', t: 'select', def: 'default', label: 'Caminho do áudio', desc: 'Web Audio usa outro caminho de saída do aparelho, com buffer menor. Experimental: se ficar sem som, volte para Padrão.',
         opts: [['default', 'Padrão do navegador'], ['webaudio', 'Web Audio (baixa latência)']] },
+      { k: 'audioWatchdog', t: 'toggle', def: false, label: 'Reiniciar o áudio sozinho se o buffer passar de 800 ms', desc: 'Solta e religa o som (a imagem congela um instante), no máximo 3 vezes por jogo. Teste: só ajuda se o atraso estiver na saída de áudio.' },
       { t: 'button', label: 'Ressincronizar áudio agora', desc: 'Zera o buffer de saída do som (a imagem congela por um instante). Use quando o som atrasar.', btn: 'Ressincronizar', run: () => resyncAudio() },
       { t: 'note', label: 'Som atrasado só na TV? Teste "Baixo atraso". Se o pill "Áudio" já mostrar pouco (menos de 40 ms), o atraso vem da TV ou do aparelho de som: ative o Modo Jogo e desligue efeitos de áudio nas configurações da TV.' },
       { t: 'h', label: 'Imagem' },
@@ -182,6 +183,9 @@
     ]},
     { id: 'adv', icon: '🧰', title: 'Avançado', items: [
       { k: 'liteGame', t: 'toggle', def: false, label: 'Modo leve durante o jogo (teste)', desc: 'Durante o jogo desliga o painel de estatísticas, o filtro de imagem, o WebGL e a injeção no Hub. View + Menu continua funcionando. Use para descobrir se o plugin causa o atraso.' },
+      { t: 'button', label: 'Diagnosticar áudio (10 s)', desc: 'Com o jogo rodando, mede o atraso e diz se ele está no navegador, na rede ou na saída de áudio da TV. O resultado aparece na caixa abaixo.', btn: 'Diagnosticar', run: () => diagAudio() },
+      { k: 'uaMode', t: 'select', def: 'default', label: 'Identificação do navegador (app)', desc: 'Padrão = a identificação real do WebView, como o better-xcloud. Mude só se o site não abrir. A página recarrega.',
+        opts: [['default', 'Padrão (real do aparelho)'], ['windows', 'Windows + Edge (versão real do WebView)'], ['tv', 'Smart TV (Tizen)']], when: () => IN_APP() },
       { k: 'debug', t: 'toggle', def: false, label: 'Log de depuração no console' },
       { t: 'button', label: 'Descobrir elementos do Hub', desc: 'Lista no campo abaixo classes que parecem ser do menu do Xbox.', btn: 'Listar', run: () => { J().value = discover().join('\n') || 'Nada encontrado. Abra o Hub durante o jogo e tente de novo.'; } },
       { t: 'area', id: 'json', label: 'Exportar / importar', ph: 'Clique em Exportar, ou cole um JSON e clique em Importar.' },
@@ -197,6 +201,8 @@
   const defaults = () => { const d = {}; SCHEMA.forEach(s => s.items.forEach(i => { if (i.k) d[i.k] = i.def; })); return d; };
   const cfg = Object.assign(defaults(), jget(LS, {}));
   // Migração 1.1.0: estatísticas leves por padrão (as outras continuam disponíveis, desligadas)
+  // Migração 1.1.2: volta ao comportamento padrão do better-xcloud (nada forçado)
+  if ((cfg.cfgVer || 0) < 10) { cfg.tvMode = 'off'; cfg.audioLatency = 'auto'; cfg.audioMode = 'default'; cfg.cfgVer = 10; try { localStorage.setItem(LS, JSON.stringify(cfg)); } catch (_) {} }
   if ((cfg.cfgVer || 0) < 9) { Object.assign(cfg, { hud_fps: true, hud_ping: true, hud_bitrate: true, hud_audio: true, hud_loss: false, hud_jitter: false, hud_res: false, hud_decode: false, hud_drop: false, hud_codec: false }); cfg.cfgVer = 9; try { localStorage.setItem(LS, JSON.stringify(cfg)); } catch (_) {} }
   const tvOn = () => cfg.tvMode === 'on' || (cfg.tvMode === 'auto' && !!window.XceNative);
   const effRes = () => cfg.resolution !== 'auto' ? cfg.resolution : (tvOn() ? '720p' : 'auto');
@@ -215,6 +221,7 @@
     if (k === 'gl') glSync();
     if (k === 'clips') state.streaming && (cfg.clips ? clipStart() : clipStop());
     if (k === 'devBright') native('setBrightness', v / 100);
+    if (k === 'uaMode') native('setUA', v);
     if (['map', 'keymap', 'accent', 'gearPos', 'hudMode'].includes(k)) refresh();
   }
   function setMany(o) { Object.assign(cfg, o); save(); applyStyle(); glSync(); renderHud(); updateTouch(); refresh(); }
@@ -577,7 +584,7 @@
     if (WA.ctx && WA.stream === stream && WA.n === tracks.length) return;
     waStop();
     try {
-      const AC = window.AudioContext || window.webkitAudioContext, ctx = new AC({ latencyHint: 'interactive' });
+      const AC = window.AudioContext || window.webkitAudioContext; let ctx; try { ctx = new AC({ latencyHint: 0 }); } catch (_) { ctx = new AC({ latencyHint: 'interactive' }); }
       const gain = ctx.createGain(); gain.gain.value = 1;
       ctx.createMediaStreamSource(new MediaStream(tracks)).connect(gain); gain.connect(ctx.destination);
       const el = new Audio(); el.muted = true; el.srcObject = new MediaStream(tracks); el.play?.().catch(() => {});
@@ -591,6 +598,56 @@
     try { if (WA.el) WA.el.srcObject = null; } catch (_) {}
     try { if (WA.v) WA.v.muted = false; } catch (_) {}
     Object.assign(WA, { ctx: null, gain: null, el: null, stream: null, n: 0, v: null });
+  }
+  // Vigia opcional: se o buffer de áudio ficar acima de 800 ms por ~10 s, reinicia o áudio (no máximo 3 vezes por jogo)
+  let wdBad = 0, wdLast = -1e9, wdCount = 0, wdPrev = null;
+  setInterval(async () => {
+    if (!cfg.audioWatchdog || !state.streaming || !state.pc || state.open) { wdBad = 0; wdPrev = null; return; }
+    const ar = state.pc.getReceivers().find(r => r.track?.kind === 'audio'); if (!ar) return;
+    try {
+      let a = null; (await ar.getStats()).forEach(x => { if (x.type === 'inbound-rtp') a = x; });
+      if (a?.jitterBufferEmittedCount && wdPrev && a.jitterBufferEmittedCount > wdPrev.n) {
+        const ms = (a.jitterBufferDelay - wdPrev.d) / (a.jitterBufferEmittedCount - wdPrev.n) * 1000;
+        wdBad = ms > 800 ? wdBad + 1 : 0;
+        if (wdBad >= 2 && Date.now() - wdLast > 30000 && wdCount < 3) { wdBad = 0; wdLast = Date.now(); wdCount++; resyncAudio(); }
+      }
+      if (a?.jitterBufferEmittedCount) wdPrev = { d: a.jitterBufferDelay, n: a.jitterBufferEmittedCount };
+    } catch (_) {}
+  }, 5000);
+
+  // Diagnóstico de 10 s: mostra ONDE está o atraso (buffer do navegador, rede ou saída de áudio do aparelho)
+  async function diagAudio() {
+    const out = J(), say = t => { if (out) out.value = t; };
+    const pc = state.pc, v = streamVideo(), ar = pc?.getReceivers().find(r => r.track?.kind === 'audio');
+    if (!pc || !v || !ar) { say('Inicie um jogo e abra o painel pelo Hub antes de rodar o diagnóstico.'); return toast('Nenhum stream de áudio ativo'); }
+    say('Medindo por 10 s…'); toast('Diagnóstico de áudio: 10 s');
+    const snap = async () => { let a = null; (await ar.getStats()).forEach(x => { if (x.type === 'inbound-rtp') a = x; }); return a || {}; };
+    const q0 = v.getVideoPlaybackQuality?.(), a0 = await snap(); await sleep(10000);
+    const q1 = v.getVideoPlaybackQuality?.(), a1 = await snap();
+    const d = k => (a1[k] || 0) - (a0[k] || 0), em = d('jitterBufferEmittedCount'), tot = d('totalSamplesReceived') || 1;
+    const buf = em > 0 ? d('jitterBufferDelay') / em * 1000 : null, tgt = em > 0 && a1.jitterBufferTargetDelay != null ? d('jitterBufferTargetDelay') / em * 1000 : null;
+    const jit = (a1.jitter || 0) * 1000, rx = d('packetsReceived'), lost = d('packetsLost'), loss = rx + lost > 0 ? lost / (rx + lost) * 100 : 0;
+    const conc = d('concealedSamples') / tot * 100, acc = d('removedSamplesForAcceleration') / tot * 100, dec = d('insertedSamplesForDeceleration') / tot * 100;
+    let base = null, outLat = null;
+    try { const AC = window.AudioContext || window.webkitAudioContext, c = new AC({ latencyHint: 0 }); base = c.baseLatency * 1000; outLat = c.outputLatency != null ? c.outputLatency * 1000 : null; c.close(); } catch (_) {}
+    const wv = IN_APP() ? String(native('webViewInfo') || '') : '', wvMajor = parseInt((wv.match(/(\d+)\./) || [])[1], 10);
+    const fr = n => n == null || isNaN(n) ? '—' : Math.round(n) + ' ms';
+    const dropped = q0 && q1 ? q1.droppedVideoFrames - q0.droppedVideoFrames : null, frames = q0 && q1 ? q1.totalVideoFrames - q0.totalVideoFrames : null;
+    const L = ['DIAGNÓSTICO DE ÁUDIO (10 s)',
+      `Buffer do áudio no navegador: ${fr(buf)}` + (tgt != null ? ` (alvo ${fr(tgt)})` : ''),
+      `Jitter de chegada: ${jit.toFixed(0)} ms · Perda: ${loss.toFixed(1)}%`,
+      `Som refeito (ocultação): ${conc.toFixed(1)}% · acelerando: ${acc.toFixed(1)}% · desacelerando: ${dec.toFixed(1)}%`,
+      `Saída de áudio do aparelho: base ${fr(base)} · saída ${fr(outLat)}`,
+      `Quadros de vídeo descartados: ${dropped ?? '—'} de ${frames ?? '—'}`,
+      ...(wv ? [`WebView do aparelho: ${wv}`] : []), ''];
+    if (wvMajor && wvMajor < 110) L.push(`ATENÇÃO: o WebView desta TV é antigo (versão ${wvMajor}). Atualize "Android System WebView" / Chrome na loja de apps da TV: versões antigas lidam mal com o áudio do xCloud.`, '');
+    if (buf == null) L.push('VEREDITO: sem dados suficientes. Rode de novo com o jogo ativo.');
+    else if (buf < 150 && !(outLat > 300)) L.push('VEREDITO: o navegador entrega o áudio com pouco atraso. Se você ainda ouve atraso, ele vem da TV (modo jogo, efeitos de som, barra de som/HDMI ARC).');
+    else if (outLat > 300) L.push(`VEREDITO: a saída de áudio da TV reporta ${fr(outLat)} de atraso. É do aparelho/WebView; teste o Modo Jogo da TV e desligue efeitos de som.`);
+    else if (jit >= 30 || loss >= 1) L.push('VEREDITO: a rede entrega os pacotes em rajadas (jitter alto ou perda). O navegador aumenta o buffer para não picotar. Melhore o Wi-Fi da TV (5 GHz, perto do roteador) ou use cabo.');
+    else if (conc > 5) L.push('VEREDITO: falta áudio (ocultação alta). O aparelho não está consumindo o som no ritmo certo.');
+    else L.push('VEREDITO: o navegador segura o áudio mesmo com rede estável. Costuma ser a sincronia com um vídeo que chega atrasado (decodificação/tela). Use "Desempenho máximo" e confira a tela em 60 Hz.');
+    say(L.join('\n')); toast('Diagnóstico pronto: veja em Avançado');
   }
   function resyncAudio() {
     const v = streamVideo(); if (!v?.srcObject) return toast('Nenhum stream ativo');
@@ -741,7 +798,7 @@ void main(){
     updateGear(); renderQueue(); updateTouch(); applyStyle();
   }
   function onStreamEnd() {
-    waStop(); state.streaming = false; state.hubOpen = false; wl?.release?.(); wl = null; glStop(); clipStop(); introUntil = 0;
+    waStop(); wdCount = 0; state.streaming = false; state.hubOpen = false; wl?.release?.(); wl = null; glStop(); clipStop(); introUntil = 0;
     updateGear(); updateTouch(); renderHud(); applyStyle();
   }
   setInterval(() => {
@@ -1135,6 +1192,7 @@ input[type=range]{accent-color:var(--ac);width:150px}.val{min-width:70px;text-al
 
   const start = () => {
     if (state.ready) return; state.ready = true; build();
+    if (IN_APP()) { const m = native('getUA'); if (m && m !== cfg.uaMode) { cfg.uaMode = m; save(); refresh(); } }
     if (cfg.debug) new MutationObserver(() => { if (state.streaming) log('DOM mudou', discover().slice(0, 8)); }).observe(document.documentElement, { childList: true, subtree: true });
     toast(`xCloud Enhancer v${VERSION} ativo`);
     ['pointermove', 'touchstart'].forEach(ev => window.addEventListener(ev, () => wakeGear(), { passive: true }));
@@ -1144,7 +1202,7 @@ input[type=range]{accent-color:var(--ac);width:150px}.val{min-width:70px;text-al
 
   // API para o app Android e para testes
   window.xce = { cfg, state, set, nav, toggle: v => toggle(v), back: () => { if (state.open) { toggle(false); return true; } if (state.streaming && cfg.backOpens) { toggle(true); return true; } return false; },
-    tab: id => { ui.tab = id; refresh(); nav0.i = 0; paintCursor(); }, tabId: () => ui.tab, waActive: () => !!WA.ctx, resyncAudio, cssText: () => styleEl?.textContent, liteOn, discover };
+    tab: id => { ui.tab = id; refresh(); nav0.i = 0; paintCursor(); }, tabId: () => ui.tab, diagAudio, waActive: () => !!WA.ctx, resyncAudio, cssText: () => styleEl?.textContent, liteOn, discover };
   } catch (e) { fatal(e); }
 
   // Se algo der errado ao iniciar, mostra um aviso vermelho na tela (toque para fechar)
