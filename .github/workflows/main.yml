@@ -3,7 +3,12 @@ name: Build APK
 on:
   push:
     branches: [ "main", "master" ]
+    tags:
+      - 'v*'
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -27,13 +32,20 @@ jobs:
         
         if [ -f "./gradlew" ]; then
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleRelease --no-daemon
         else
-          gradle assembleDebug
+          gradle assembleRelease
         fi
 
-    - name: Upload APK
+    - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: xcloud-enhancer-apk
-        path: '**/build/outputs/apk/debug/*.apk'
+        path: '**/build/outputs/apk/release/*.apk'
+
+    - name: Upload APK to GitHub Release
+      uses: softprops/action-gh-release@v2
+      if: startsWith(github.ref, 'refs/tags/v')
+      with:
+        files: '**/build/outputs/apk/release/*.apk'
+        generate_release_notes: true
